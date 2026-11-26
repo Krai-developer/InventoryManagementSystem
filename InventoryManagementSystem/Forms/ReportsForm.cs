@@ -65,6 +65,7 @@ namespace InventoryManagementSystem.Forms
             filterCard.Controls.Add(new Label
             {
                 Text = "Reports & Analytics",
+                UseMnemonic = false,
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,

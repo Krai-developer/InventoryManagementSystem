@@ -50,26 +50,37 @@ namespace InventoryManagementSystem.Forms
                 Padding = new Padding(22, 16, 22, 16),
                 BackColor = Color.Transparent
             };
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 56));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 215));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 74));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 232));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-            var header = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
+            var header = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0)
+            };
             _lblTitle = new Label
             {
                 Text = "My Account",
+                UseMnemonic = false,
                 Font = UITheme.FontWelcome,
                 ForeColor = UITheme.TextPrimary,
-                Location = new Point(0, 0),
-                AutoSize = true
+                BackColor = Color.Transparent,
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 4)
             };
             _lblSubtitle = new Label
             {
                 Text = "View your account role, update permitted personal details, and change your password.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
-                Location = new Point(2, 32),
-                AutoSize = true
+                BackColor = Color.Transparent,
+                AutoSize = true,
+                Margin = new Padding(2, 0, 0, 0)
             };
             header.Controls.Add(_lblTitle);
             header.Controls.Add(_lblSubtitle);
@@ -93,25 +104,26 @@ namespace InventoryManagementSystem.Forms
             _lblProfileMeta = new Label
             {
                 Text = "Loading...",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.ElectricBlue,
                 BackColor = Color.Transparent,
-                Location = new Point(22, 40),
-                Size = new Size(440, 22)
+                Location = new Point(22, 42),
+                AutoSize = true
             };
 
-            infoCard.Controls.Add(new Label { Text = "Full Name", Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(22, 66), AutoSize = true });
-            _txtFullName = new TextBox { Location = new Point(22, 85), Size = new Size(210, 27) };
+            infoCard.Controls.Add(new Label { Text = "Full Name", UseMnemonic = false, Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(22, 70), AutoSize = true });
+            _txtFullName = new TextBox { Location = new Point(22, 92), Size = new Size(210, 27) };
             UITheme.StyleTextBox(_txtFullName);
 
-            infoCard.Controls.Add(new Label { Text = "Email Address", Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(246, 66), AutoSize = true });
-            _txtEmail = new TextBox { Location = new Point(246, 85), Size = new Size(220, 27) };
+            infoCard.Controls.Add(new Label { Text = "Email Address", UseMnemonic = false, Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(246, 70), AutoSize = true });
+            _txtEmail = new TextBox { Location = new Point(246, 92), Size = new Size(220, 27) };
             UITheme.StyleTextBox(_txtEmail);
 
             var btnSaveProfile = new GradientButton
             {
                 Text = "Save Personal Details",
-                Location = new Point(22, 126),
+                Location = new Point(22, 134),
                 Size = new Size(200, 36),
                 CornerRadius = 9,
                 GradientStart = UITheme.TealGlow,
@@ -122,11 +134,13 @@ namespace InventoryManagementSystem.Forms
             _lblRoleSummary = new Label
             {
                 Text = string.Empty,
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
                 Location = new Point(495, 42),
-                Size = new Size(430, 130)
+                MaximumSize = new Size(440, 0),
+                AutoSize = true
             };
 
             infoCard.Controls.Add(_lblProfileMeta);

@@ -85,12 +85,13 @@ namespace InventoryManagementSystem.Forms
             var lblTitle = new Label
             {
                 Text = "Create User Account",
+                UseMnemonic = false,
                 Font = UITheme.FontWelcome,
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(20, 22),
-                Size = new Size(Width - 40, 34)
+                Location = new Point(20, 18),
+                Size = new Size(Width - 40, 42)
             };
             lblTitle.MouseDown += DragWindow;
             Controls.Add(lblTitle);
@@ -98,12 +99,13 @@ namespace InventoryManagementSystem.Forms
             var lblSub = new Label
             {
                 Text = "Register a new standard User account for Inventory Pro",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.SidebarTextMuted,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(20, 58),
-                Size = new Size(Width - 40, 20)
+                Location = new Point(20, 62),
+                Size = new Size(Width - 40, 24)
             };
             lblSub.MouseDown += DragWindow;
             Controls.Add(lblSub);

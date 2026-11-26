@@ -93,10 +93,10 @@ namespace InventoryManagementSystem.Forms
                 RowCount = 4,
                 BackColor = Color.Transparent
             };
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 58F));   // Row 0: Welcome Header
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 68F));   // Row 0: Welcome Header (High-DPI safe)
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 108F));  // Row 1: 4 Summary Cards
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));   // Row 2: Inventory List + Right Panels
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 148F));  // Row 3: Bottom Activity + Info Card
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 152F));  // Row 3: Bottom Activity + Info Card
 
             // =================================================================
             // ROW 0: DASHBOARD WELCOME HEADER
@@ -136,46 +136,50 @@ namespace InventoryManagementSystem.Forms
             _lblWelcome = new Label
             {
                 Text = "Welcome back!",
+                UseMnemonic = false,
                 Font = UITheme.FontWelcome,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
-                Location = new Point(14, 2),
+                Location = new Point(14, 0),
                 AutoSize = true
             };
 
             _lblWelcomeSub = new Label
             {
                 Text = "Manage your inventory efficiently and keep track of your stock.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
-                Location = new Point(16, 33),
+                Location = new Point(16, 41),
                 AutoSize = true
             };
 
             _lblAdminName = new Label
             {
                 Text = "Administrator",
+                UseMnemonic = false,
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleRight,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(headerPanel.Width - 318, 8),
-                Size = new Size(262, 20),
+                Location = new Point(headerPanel.Width - 318, 6),
+                Size = new Size(262, 24),
                 AutoEllipsis = true
             };
 
             _lblDateTime = new Label
             {
                 Text = DateTime.Now.ToString("MMM dd, yyyy  •  hh:mm tt"),
+                UseMnemonic = false,
                 Font = new Font("Segoe UI", 8F, FontStyle.Regular),
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleRight,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(headerPanel.Width - 318, 28),
-                Size = new Size(262, 18)
+                Location = new Point(headerPanel.Width - 318, 32),
+                Size = new Size(262, 22)
             };
 
             headerPanel.Controls.Add(_lblWelcome);
@@ -547,17 +551,19 @@ namespace InventoryManagementSystem.Forms
             _lblInfoSummary = new Label
             {
                 Text = "Track stock levels, manage products, and get alerts for low stock items.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(110, 44),
-                Size = new Size(320, 36)
+                Location = new Point(110, 46),
+                MaximumSize = new Size(320, 0),
+                AutoSize = true
             };
 
             var btnManage = new GradientButton
             {
                 Text = "Manage Inventory  ->",
-                Location = new Point(110, 90),
+                Location = new Point(110, 96),
                 Size = new Size(176, 34),
                 CornerRadius = 17,
                 GradientStart = UITheme.ElectricBlue,

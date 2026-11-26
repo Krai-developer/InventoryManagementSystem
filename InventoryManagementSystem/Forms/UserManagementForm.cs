@@ -12,6 +12,7 @@ namespace InventoryManagementSystem.Forms
     /// <summary>
     /// Administrator-only User Management view for viewing, searching, activating/deactivating,
     /// and resetting passwords of registered user accounts.
+    /// Uses FlowLayoutPanel + AutoSize labels on the details card so text never clips at 100%, 125%, or 150% DPI.
     /// </summary>
     public class UserManagementForm : UserControl
     {
@@ -58,7 +59,7 @@ namespace InventoryManagementSystem.Forms
                 BackColor = Color.Transparent
             };
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 360F));
+            root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 368F));
 
             // Left: Header + Search + Grid
             var leftLayout = new TableLayoutPanel
@@ -69,7 +70,7 @@ namespace InventoryManagementSystem.Forms
                 Margin = new Padding(0, 0, 12, 0),
                 BackColor = Color.Transparent
             };
-            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 96F));
+            leftLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 104F));
             leftLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             var topCard = UITheme.CreateCardPanel();
@@ -79,6 +80,7 @@ namespace InventoryManagementSystem.Forms
             _lblTitle = new Label
             {
                 Text = "User Management",
+                UseMnemonic = false,
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
@@ -89,16 +91,18 @@ namespace InventoryManagementSystem.Forms
             _lblSubtitle = new Label
             {
                 Text = "Administrator-only control over registered accounts, status, and password resets.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
-                Location = new Point(16, 32),
+                Location = new Point(16, 35),
                 AutoSize = true
             };
 
             _lblCount = new Label
             {
                 Text = "0 accounts",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.ElectricBlue,
                 BackColor = Color.Transparent,
@@ -109,7 +113,7 @@ namespace InventoryManagementSystem.Forms
 
             _txtSearch = new TextBox
             {
-                Location = new Point(16, 56),
+                Location = new Point(16, 62),
                 Size = new Size(320, 28),
                 PlaceholderText = "Search by name, username, email, or role..."
             };
@@ -119,8 +123,8 @@ namespace InventoryManagementSystem.Forms
             var btnRefresh = new Button
             {
                 Text = "Refresh",
-                Location = new Point(346, 55),
-                Size = new Size(92, 28)
+                Location = new Point(346, 60),
+                Size = new Size(92, 30)
             };
             UITheme.StyleSecondaryButton(btnRefresh);
             btnRefresh.Click += (s, e) => RefreshData();
@@ -154,143 +158,148 @@ namespace InventoryManagementSystem.Forms
 
             root.Controls.Add(leftLayout, 0, 0);
 
-            // Right: Selected Account Details + Actions
+            // Right: Selected Account Details + Actions (FlowLayoutPanel prevents any vertical text clipping at High DPI)
             _detailsCard = UITheme.CreateCardPanel(UITheme.ElectricBlue, topTint: true);
             _detailsCard.Dock = DockStyle.Fill;
-            _detailsCard.Padding = new Padding(20, 16, 20, 16);
+            _detailsCard.Padding = new Padding(18, 16, 18, 16);
 
-            int x = 20;
-            int w = 320;
-            int y = 18;
+            int w = 316;
+            var stack = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Color.Transparent
+            };
 
-            _detailsCard.Controls.Add(new Label
+            stack.Controls.Add(new Label
             {
                 Text = "Account Details & Actions",
+                UseMnemonic = false,
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                AutoSize = true
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 10)
             });
-            y += 34;
 
             _lblSelName = new Label
             {
                 Text = "Select a user account",
+                UseMnemonic = false,
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.ElectricBlue,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                Size = new Size(w, 24)
+                MaximumSize = new Size(w, 0),
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 6)
             };
-            _detailsCard.Controls.Add(_lblSelName);
-            y += 28;
+            stack.Controls.Add(_lblSelName);
 
             _lblSelMeta = new Label
             {
                 Text = "Click any row in the table to inspect registration details and manage account access.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                Size = new Size(w, 72)
+                MaximumSize = new Size(w, 0),
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 8)
             };
-            _detailsCard.Controls.Add(_lblSelMeta);
-            y += 76;
+            stack.Controls.Add(_lblSelMeta);
 
             _lblSelDates = new Label
             {
                 Text = string.Empty,
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                Size = new Size(w, 52)
+                MaximumSize = new Size(w, 0),
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 12)
             };
-            _detailsCard.Controls.Add(_lblSelDates);
-            y += 62;
+            stack.Controls.Add(_lblSelDates);
 
             _btnToggleStatus = new GradientButton
             {
                 Text = "Deactivate Account",
-                Location = new Point(x, y),
                 Size = new Size(w, 36),
                 CornerRadius = 9,
                 GradientStart = Color.FromArgb(245, 158, 11),
                 GradientEnd = Color.FromArgb(180, 83, 9),
-                Enabled = false
+                Enabled = false,
+                Margin = new Padding(0, 0, 0, 8)
             };
             _btnToggleStatus.Click += BtnToggleStatus_Click;
-            _detailsCard.Controls.Add(_btnToggleStatus);
-            y += 44;
+            stack.Controls.Add(_btnToggleStatus);
 
             _btnDeleteUser = new Button
             {
                 Text = "Delete User Account",
-                Location = new Point(x, y),
-                Size = new Size(w, 32),
-                Enabled = false
+                Size = new Size(w, 34),
+                Enabled = false,
+                Margin = new Padding(0, 0, 0, 16)
             };
             UITheme.StyleSecondaryButton(_btnDeleteUser);
             _btnDeleteUser.ForeColor = Color.FromArgb(248, 113, 113);
             _btnDeleteUser.Click += BtnDeleteUser_Click;
-            _detailsCard.Controls.Add(_btnDeleteUser);
-            y += 50;
+            stack.Controls.Add(_btnDeleteUser);
 
-            _detailsCard.Controls.Add(new Label
+            stack.Controls.Add(new Label
             {
                 Text = "Secure Password Reset",
+                UseMnemonic = false,
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                AutoSize = true
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 8)
             });
-            y += 26;
 
-            _detailsCard.Controls.Add(new Label
+            stack.Controls.Add(new Label
             {
                 Text = "New Password",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                AutoSize = true
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 3)
             });
-            y += 19;
 
             _txtNewPassword = new TextBox
             {
-                Location = new Point(x, y),
                 Size = new Size(w, 28),
                 UseSystemPasswordChar = true,
-                PlaceholderText = "Minimum 6 characters"
+                PlaceholderText = "Minimum 6 characters",
+                Margin = new Padding(0, 0, 0, 10)
             };
             UITheme.StyleTextBox(_txtNewPassword);
-            _detailsCard.Controls.Add(_txtNewPassword);
-            y += 38;
+            stack.Controls.Add(_txtNewPassword);
 
-            _detailsCard.Controls.Add(new Label
+            stack.Controls.Add(new Label
             {
                 Text = "Confirm New Password",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                AutoSize = true
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 3)
             });
-            y += 19;
 
             _txtConfirmPassword = new TextBox
             {
-                Location = new Point(x, y),
                 Size = new Size(w, 28),
                 UseSystemPasswordChar = true,
-                PlaceholderText = "Re-enter new password"
+                PlaceholderText = "Re-enter new password",
+                Margin = new Padding(0, 0, 0, 8)
             };
             UITheme.StyleTextBox(_txtConfirmPassword);
-            _detailsCard.Controls.Add(_txtConfirmPassword);
-            y += 34;
+            stack.Controls.Add(_txtConfirmPassword);
 
             _chkShowPwd = new CheckBox
             {
@@ -298,8 +307,8 @@ namespace InventoryManagementSystem.Forms
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
-                Location = new Point(x, y),
-                AutoSize = true
+                AutoSize = true,
+                Margin = new Padding(0, 0, 0, 10)
             };
             _chkShowPwd.CheckedChanged += (s, e) =>
             {
@@ -307,22 +316,22 @@ namespace InventoryManagementSystem.Forms
                 _txtNewPassword.UseSystemPasswordChar = hide;
                 _txtConfirmPassword.UseSystemPasswordChar = hide;
             };
-            _detailsCard.Controls.Add(_chkShowPwd);
-            y += 28;
+            stack.Controls.Add(_chkShowPwd);
 
             _btnResetPassword = new GradientButton
             {
                 Text = "Reset User Password",
-                Location = new Point(x, y),
                 Size = new Size(w, 36),
                 CornerRadius = 9,
                 GradientStart = UITheme.ElectricBlue,
                 GradientEnd = UITheme.PrimaryBlue,
-                Enabled = false
+                Enabled = false,
+                Margin = new Padding(0, 0, 0, 8)
             };
             _btnResetPassword.Click += BtnResetPassword_Click;
-            _detailsCard.Controls.Add(_btnResetPassword);
+            stack.Controls.Add(_btnResetPassword);
 
+            _detailsCard.Controls.Add(stack);
             root.Controls.Add(_detailsCard, 1, 0);
             Controls.Add(root);
         }
@@ -413,7 +422,6 @@ namespace InventoryManagementSystem.Forms
                 $"Last Login: {lastLogin}\n" +
                 $"Failed Login Attempts: {_selectedUser.FailedLoginAttempts}";
 
-            // Protect the sole Admin account from deactivation or deletion
             bool isAdminRow = _selectedUser.IsAdmin;
             _btnToggleStatus.Enabled = !isAdminRow;
             _btnToggleStatus.Text = _selectedUser.IsActive ? "Deactivate Account" : "Activate Account";

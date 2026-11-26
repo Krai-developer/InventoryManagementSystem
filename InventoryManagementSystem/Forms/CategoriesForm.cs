@@ -128,6 +128,7 @@ namespace InventoryManagementSystem.Forms
 
             var formCard = UITheme.CreateCardPanel(UITheme.ElectricBlue, topTint: true);
             formCard.Dock = DockStyle.Fill;
+            formCard.AutoScroll = true;
 
             int y = 16;
             _lblFormMode = new Label
@@ -188,14 +189,16 @@ namespace InventoryManagementSystem.Forms
             _lblAssignedProductsInfo = new Label
             {
                 Text = "Enter a unique category name.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
                 Location = new Point(16, y),
-                Size = new Size(320, 32)
+                MaximumSize = new Size(320, 0),
+                AutoSize = true
             };
             formCard.Controls.Add(_lblAssignedProductsInfo);
-            y += 42;
+            y += 46;
 
             _btnSave = new GradientButton
             {

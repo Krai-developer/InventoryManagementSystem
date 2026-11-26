@@ -132,6 +132,7 @@ namespace InventoryManagementSystem.Forms
             // Right: Supplier Editor Card
             var formCard = UITheme.CreateCardPanel(UITheme.ElectricBlue, topTint: true);
             formCard.Dock = DockStyle.Fill;
+            formCard.AutoScroll = true;
 
             int y = 14;
             _lblFormMode = new Label
@@ -179,14 +180,16 @@ namespace InventoryManagementSystem.Forms
             _lblLinkedInfo = new Label
             {
                 Text = "Enter supplier details to register a vendor.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
                 Location = new Point(16, y),
-                Size = new Size(326, 26)
+                MaximumSize = new Size(326, 0),
+                AutoSize = true
             };
             formCard.Controls.Add(_lblLinkedInfo);
-            y += 32;
+            y += 38;
 
             _btnSave = new GradientButton
             {

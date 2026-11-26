@@ -562,6 +562,9 @@ namespace InventoryManagementSystem.Forms
                 _productsForm.RefreshData(productId);
             };
             _settingsForm.DataRestored += () => _dashboardView.RefreshDashboard();
+
+            // Apply initial theme pass across all views so UseMnemonic=false and colors are consistent from startup
+            ApplyThemeMode(_tglDarkMode.Checked);
         }
 
         private void MainForm_Load(object? sender, EventArgs e)

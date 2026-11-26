@@ -111,6 +111,7 @@ namespace InventoryManagementSystem.Forms
             _lblFormBanner = new Label
             {
                 Text = "Record Incoming Stock",
+                UseMnemonic = false,
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
@@ -118,33 +119,33 @@ namespace InventoryManagementSystem.Forms
                 AutoSize = true
             };
             _entryCard.Controls.Add(_lblFormBanner);
-            y += 30;
+            y += 34;
 
             _entryCard.Controls.Add(CreateLabel("Product *", 16, y));
-            y += 19;
+            y += 23;
             _cboProduct = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Location = new Point(16, y),
-                Size = new Size(348, 27)
+                Size = new Size(348, 28)
             };
             UITheme.StyleComboBox(_cboProduct);
             _cboProduct.SelectedIndexChanged += (s, e) => UpdateProductPreview();
             _entryCard.Controls.Add(_cboProduct);
-            y += 34;
+            y += 38;
 
             _lblSupplierCaption = CreateLabel("Supplier (for Stock In)", 16, y);
             _entryCard.Controls.Add(_lblSupplierCaption);
-            y += 19;
+            y += 23;
             _cboSupplier = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Location = new Point(16, y),
-                Size = new Size(348, 27)
+                Size = new Size(348, 28)
             };
             UITheme.StyleComboBox(_cboSupplier);
             _entryCard.Controls.Add(_cboSupplier);
-            y += 36;
+            y += 38;
 
             _previewBox = new Panel
             {
@@ -175,29 +176,29 @@ namespace InventoryManagementSystem.Forms
 
             _lblQuantityCaption = CreateLabel("Quantity *", 16, y);
             _entryCard.Controls.Add(_lblQuantityCaption);
-            y += 19;
+            y += 23;
             _numQuantity = new NumericUpDown
             {
                 Minimum = 0,
                 Maximum = 100000,
                 Value = 1,
                 Location = new Point(16, y),
-                Size = new Size(168, 27)
+                Size = new Size(168, 28)
             };
             UITheme.StyleNumericUpDown(_numQuantity);
             _numQuantity.ValueChanged += (s, e) => UpdateProductPreview();
             _entryCard.Controls.Add(_numQuantity);
 
-            _entryCard.Controls.Add(CreateLabel("Transaction Date", 196, y - 19));
+            _entryCard.Controls.Add(CreateLabel("Transaction Date", 196, y - 23));
             _dtpTxDate = new DateTimePicker
             {
                 Format = DateTimePickerFormat.Short,
                 Location = new Point(196, y),
-                Size = new Size(168, 27),
+                Size = new Size(168, 28),
                 Value = DateTime.Today
             };
             _entryCard.Controls.Add(_dtpTxDate);
-            y += 35;
+            y += 38;
 
             _entryCard.Controls.Add(CreateLabel("Reference Number", 16, y));
             var lnkAutoRef = new LinkLabel
@@ -207,25 +208,25 @@ namespace InventoryManagementSystem.Forms
                 LinkColor = UITheme.ElectricBlue,
                 ActiveLinkColor = Color.White,
                 BackColor = Color.Transparent,
-                Location = new Point(304, y),
+                Location = new Point(300, y),
                 AutoSize = true
             };
             lnkAutoRef.LinkClicked += (s, e) => GenerateReferenceNumber();
             _entryCard.Controls.Add(lnkAutoRef);
-            y += 19;
+            y += 23;
 
             _txtReferenceNo = new TextBox
             {
                 Location = new Point(16, y),
-                Size = new Size(348, 27),
+                Size = new Size(348, 28),
                 PlaceholderText = "e.g., PO-2026-105"
             };
             UITheme.StyleTextBox(_txtReferenceNo);
             _entryCard.Controls.Add(_txtReferenceNo);
-            y += 35;
+            y += 38;
 
             _entryCard.Controls.Add(CreateLabel("Reason / Notes", 16, y));
-            y += 19;
+            y += 23;
             _txtRemarks = new TextBox
             {
                 Location = new Point(16, y),

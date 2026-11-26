@@ -92,12 +92,13 @@ namespace InventoryManagementSystem.Forms
             var lblBrand = new Label
             {
                 Text = "Inventory Pro",
+                UseMnemonic = false,
                 Font = UITheme.FontWelcome,
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(20, 94),
-                Size = new Size(Width - 40, 34)
+                Location = new Point(20, 90),
+                Size = new Size(Width - 40, 42)
             };
             lblBrand.MouseDown += DragWindow;
             Controls.Add(lblBrand);
@@ -105,12 +106,13 @@ namespace InventoryManagementSystem.Forms
             var lblSub = new Label
             {
                 Text = "Sign in to access your inventory workspace",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.SidebarTextMuted,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(20, 128),
-                Size = new Size(Width - 40, 20)
+                Location = new Point(20, 132),
+                Size = new Size(Width - 40, 24)
             };
             lblSub.MouseDown += DragWindow;
             Controls.Add(lblSub);

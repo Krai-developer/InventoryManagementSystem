@@ -93,12 +93,13 @@ namespace InventoryManagementSystem.Forms
             var lblTitle = new Label
             {
                 Text = "Initial Administrator Setup",
+                UseMnemonic = false,
                 Font = UITheme.FontWelcome,
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(20, 78),
-                Size = new Size(Width - 40, 34)
+                Location = new Point(20, 74),
+                Size = new Size(Width - 40, 42)
             };
             lblTitle.MouseDown += DragWindow;
             Controls.Add(lblTitle);
@@ -106,12 +107,13 @@ namespace InventoryManagementSystem.Forms
             var lblSub = new Label
             {
                 Text = "Set up the single Administrator account for this installation.\nOnce created, no additional Admin accounts can be registered.",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.SidebarTextMuted,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(24, 114),
-                Size = new Size(Width - 48, 34)
+                Location = new Point(24, 116),
+                Size = new Size(Width - 48, 40)
             };
             lblSub.MouseDown += DragWindow;
             Controls.Add(lblSub);

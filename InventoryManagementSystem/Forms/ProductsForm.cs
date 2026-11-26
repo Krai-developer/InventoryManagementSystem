@@ -322,11 +322,11 @@ namespace InventoryManagementSystem.Forms
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(14, 36),
-                Size = new Size(346, 616)
+                Location = new Point(14, 38),
+                Size = new Size(346, 695)
             };
 
-            int y = 22;
+            int y = 26;
 
             _picProductThumb = new PictureBox
             {
@@ -342,8 +342,8 @@ namespace InventoryManagementSystem.Forms
             _btnBrowseImage = new Button
             {
                 Text = "Choose Image...",
-                Location = new Point(76, y + 4),
-                Size = new Size(134, 26)
+                Location = new Point(76, y + 2),
+                Size = new Size(138, 28)
             };
             UITheme.StyleSecondaryButton(_btnBrowseImage);
             _btnBrowseImage.Click += BtnBrowseImage_Click;
@@ -352,13 +352,14 @@ namespace InventoryManagementSystem.Forms
             _grpEditor.Controls.Add(new Label
             {
                 Text = "Optional product photo",
+                UseMnemonic = false,
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
                 Location = new Point(76, y + 32),
                 AutoSize = true
             });
-            y += 58;
+            y += 60;
 
             _grpEditor.Controls.Add(CreateFieldLabel("Product ID / SKU *", 14, y));
             var lnkGenSku = new LinkLabel
@@ -368,47 +369,47 @@ namespace InventoryManagementSystem.Forms
                 LinkColor = UITheme.ElectricBlue,
                 ActiveLinkColor = Color.White,
                 BackColor = Color.Transparent,
-                Location = new Point(272, y),
+                Location = new Point(268, y),
                 AutoSize = true,
                 Visible = SessionManager.CanManageProducts
             };
             lnkGenSku.LinkClicked += (s, e) => _txtSku.Text = $"P{Random.Shared.Next(100, 999)}";
             _grpEditor.Controls.Add(lnkGenSku);
-            y += 18;
+            y += 23;
 
-            _txtSku = new TextBox { Location = new Point(14, y), Size = new Size(316, 26), PlaceholderText = "e.g., P001" };
+            _txtSku = new TextBox { Location = new Point(14, y), Size = new Size(316, 28), PlaceholderText = "e.g., P001" };
             UITheme.StyleTextBox(_txtSku);
             _grpEditor.Controls.Add(_txtSku);
-            y += 32;
+            y += 38;
 
-            _grpEditor.Controls.Add(CreateFieldLabel("Product Name *", 14, y)); y += 18;
-            _txtProductName = new TextBox { Location = new Point(14, y), Size = new Size(316, 26), PlaceholderText = "Enter product name" };
+            _grpEditor.Controls.Add(CreateFieldLabel("Product Name *", 14, y)); y += 23;
+            _txtProductName = new TextBox { Location = new Point(14, y), Size = new Size(316, 28), PlaceholderText = "Enter product name" };
             UITheme.StyleTextBox(_txtProductName);
             _grpEditor.Controls.Add(_txtProductName);
-            y += 32;
+            y += 38;
 
-            _grpEditor.Controls.Add(CreateFieldLabel("Description", 14, y)); y += 18;
-            _txtDescription = new TextBox { Location = new Point(14, y), Size = new Size(316, 44), Multiline = true, PlaceholderText = "Optional product details" };
+            _grpEditor.Controls.Add(CreateFieldLabel("Description", 14, y)); y += 23;
+            _txtDescription = new TextBox { Location = new Point(14, y), Size = new Size(316, 46), Multiline = true, PlaceholderText = "Optional product details" };
             UITheme.StyleTextBox(_txtDescription);
             _grpEditor.Controls.Add(_txtDescription);
-            y += 50;
+            y += 54;
 
-            _grpEditor.Controls.Add(CreateFieldLabel("Category *", 14, y)); y += 18;
-            _cboCategory = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(14, y), Size = new Size(316, 26) };
+            _grpEditor.Controls.Add(CreateFieldLabel("Category *", 14, y)); y += 23;
+            _cboCategory = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(14, y), Size = new Size(316, 28) };
             UITheme.StyleComboBox(_cboCategory);
             _grpEditor.Controls.Add(_cboCategory);
-            y += 32;
+            y += 38;
 
-            _grpEditor.Controls.Add(CreateFieldLabel("Supplier", 14, y)); y += 18;
-            _cboSupplier = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(14, y), Size = new Size(316, 26) };
+            _grpEditor.Controls.Add(CreateFieldLabel("Supplier", 14, y)); y += 23;
+            _cboSupplier = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(14, y), Size = new Size(316, 28) };
             UITheme.StyleComboBox(_cboSupplier);
             _grpEditor.Controls.Add(_cboSupplier);
-            y += 32;
+            y += 38;
 
             // Purchase Price & Selling Price side-by-side
             _grpEditor.Controls.Add(CreateFieldLabel("Purchase Price (₱)", 14, y));
             _grpEditor.Controls.Add(CreateFieldLabel("Selling Price (₱) *", 178, y));
-            y += 18;
+            y += 23;
 
             _numPurchasePrice = new NumericUpDown
             {
@@ -418,7 +419,7 @@ namespace InventoryManagementSystem.Forms
                 Increment = 5M,
                 ThousandsSeparator = true,
                 Location = new Point(14, y),
-                Size = new Size(152, 26)
+                Size = new Size(152, 28)
             };
             UITheme.StyleNumericUpDown(_numPurchasePrice);
             _grpEditor.Controls.Add(_numPurchasePrice);
@@ -431,26 +432,26 @@ namespace InventoryManagementSystem.Forms
                 Increment = 5M,
                 ThousandsSeparator = true,
                 Location = new Point(178, y),
-                Size = new Size(152, 26)
+                Size = new Size(152, 28)
             };
             UITheme.StyleNumericUpDown(_numUnitPrice);
             _grpEditor.Controls.Add(_numUnitPrice);
-            y += 32;
+            y += 38;
 
             // Opening Stock & Min Stock Level side-by-side
             _lblInitialStockCaption = CreateFieldLabel("Opening Stock", 14, y);
             _grpEditor.Controls.Add(_lblInitialStockCaption);
             _grpEditor.Controls.Add(CreateFieldLabel("Min Stock Level *", 178, y));
-            y += 18;
+            y += 23;
 
-            _numInitialStock = new NumericUpDown { Maximum = 100000, Minimum = 0, Location = new Point(14, y), Size = new Size(152, 26) };
+            _numInitialStock = new NumericUpDown { Maximum = 100000, Minimum = 0, Location = new Point(14, y), Size = new Size(152, 28) };
             UITheme.StyleNumericUpDown(_numInitialStock);
             _grpEditor.Controls.Add(_numInitialStock);
 
-            _numReorderLevel = new NumericUpDown { Maximum = 100000, Minimum = 0, Value = 10, Location = new Point(178, y), Size = new Size(152, 26) };
+            _numReorderLevel = new NumericUpDown { Maximum = 100000, Minimum = 0, Value = 10, Location = new Point(178, y), Size = new Size(152, 28) };
             UITheme.StyleNumericUpDown(_numReorderLevel);
             _grpEditor.Controls.Add(_numReorderLevel);
-            y += 38;
+            y += 42;
 
             _btnSave = new GradientButton
             {

@@ -273,10 +273,10 @@ namespace InventoryManagementSystem.Theme
                 UITheme.DrawNavIcon(g, IconKind, new RectangleF(14, (Height - 16) / 2f, 16, 16), iconCol);
             }
 
-            TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+            TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
             if (TextAlign == ContentAlignment.MiddleLeft)
             {
-                flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+                flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix;
                 int leftPad = hasIcon ? 38 : Padding.Left;
                 Rectangle textRect = new Rectangle(leftPad, 0, Width - leftPad - 8, Height);
                 TextRenderer.DrawText(g, Text, Font, textRect, textCol, flags);
@@ -831,6 +831,9 @@ namespace InventoryManagementSystem.Theme
                 }
                 else if (c is Label lbl)
                 {
+                    // Prevent '&' in titles/descriptions from being eaten as keyboard mnemonics
+                    lbl.UseMnemonic = false;
+
                     // Preserve intentional semantic accent colors (blue, green, amber, red, purple)
                     Color fc = lbl.ForeColor;
                     bool isAccent =
