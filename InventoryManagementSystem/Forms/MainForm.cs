@@ -40,7 +40,9 @@ namespace InventoryManagementSystem.Forms
         private GradientButton _btnNavCategories = null!;
         private GradientButton _btnNavSuppliers = null!;
         private GradientButton _btnNavStock = null!;
-        private GradientButton _btnNavLowStock = null!;
+        private GradientButton _btnNavStockIn = null!;
+        private GradientButton _btnNavStockOut = null!;
+        private GradientButton _btnNavTxHistory = null!;
         private GradientButton _btnNavReports = null!;
         private GradientButton _btnNavActivity = null!;
         private GradientButton _btnNavUsers = null!;
@@ -54,6 +56,7 @@ namespace InventoryManagementSystem.Forms
         private CategoriesForm _categoriesForm = null!;
         private SuppliersForm _suppliersForm = null!;
         private StockTransactionForm _stockTransactionForm = null!;
+        private TransactionHistoryForm _transactionHistoryForm = null!;
         private LowStockForm _lowStockForm = null!;
         private ReportsForm _reportsForm = null!;
         private ActivityHistoryForm _activityHistoryForm = null!;
@@ -130,9 +133,13 @@ namespace InventoryManagementSystem.Forms
                 }
             };
 
+            string roleBadge = SessionManager.CurrentUser != null
+                ? $"  •  {SessionManager.CurrentUser.FullName} ({SessionManager.CurrentUser.Role})"
+                : string.Empty;
+
             var lblAppTitle = new Label
             {
-                Text = "Inventory and Stock Management System",
+                Text = "Inventory and Stock Management System" + roleBadge,
                 Font = new Font("Segoe UI Semibold", 9.25F, FontStyle.Regular),
                 ForeColor = Color.FromArgb(226, 232, 240),
                 BackColor = Color.Transparent,
@@ -306,20 +313,22 @@ namespace InventoryManagementSystem.Forms
             _sidebarPanel.Controls.Add(lblBrandName);
             _sidebarPanel.Controls.Add(lblBrandSub);
 
-            // Navigation Pill Buttons (dynamically laid out so User role has no empty gaps)
+            // Navigation Pill Buttons tailored per role
             bool isAdmin = SessionManager.IsAdmin;
             int navY = 148;
             _btnNavDashboard  = CreateSidebarNavButton("Dashboard", ref navY, visible: true);
             _btnNavProducts   = CreateSidebarNavButton("Products", ref navY, visible: true);
             _btnNavCategories = CreateSidebarNavButton("Categories", ref navY, visible: isAdmin);
             _btnNavSuppliers  = CreateSidebarNavButton("Suppliers", ref navY, visible: isAdmin);
-            _btnNavStock      = CreateSidebarNavButton("Stock In / Out", ref navY, visible: true);
-            _btnNavLowStock   = CreateSidebarNavButton("Low Stock", ref navY, visible: true);
+            _btnNavStock      = CreateSidebarNavButton("Stock Management", ref navY, visible: isAdmin);
+            _btnNavStockIn    = CreateSidebarNavButton("Stock In", ref navY, visible: !isAdmin);
+            _btnNavStockOut   = CreateSidebarNavButton("Stock Out", ref navY, visible: !isAdmin);
+            _btnNavTxHistory  = CreateSidebarNavButton("Transaction History", ref navY, visible: !isAdmin);
             _btnNavReports    = CreateSidebarNavButton("Reports", ref navY, visible: true);
-            _btnNavActivity   = CreateSidebarNavButton("Activity", ref navY, visible: isAdmin);
-            _btnNavUsers      = CreateSidebarNavButton("Users", ref navY, visible: isAdmin);
+            _btnNavActivity   = CreateSidebarNavButton("Activity History", ref navY, visible: isAdmin);
+            _btnNavUsers      = CreateSidebarNavButton("User Management", ref navY, visible: isAdmin);
             _btnNavSettings   = CreateSidebarNavButton("Settings", ref navY, visible: isAdmin);
-            _btnNavProfile    = CreateSidebarNavButton("My Profile", ref navY, visible: true);
+            _btnNavProfile    = CreateSidebarNavButton("My Account", ref navY, visible: !isAdmin);
 
             // Bottom Logout + Dark Mode Panel inside Sidebar
             var darkModePanel = new Panel
@@ -420,6 +429,7 @@ namespace InventoryManagementSystem.Forms
             _categoriesForm = new CategoriesForm();
             _suppliersForm = new SuppliersForm();
             _stockTransactionForm = new StockTransactionForm();
+            _transactionHistoryForm = new TransactionHistoryForm();
             _lowStockForm = new LowStockForm();
             _reportsForm = new ReportsForm();
             _activityHistoryForm = new ActivityHistoryForm();
@@ -454,8 +464,13 @@ namespace InventoryManagementSystem.Forms
             };
 
             _btnNavStock.Click += (s, e) => OpenStockView("IN", 0);
-
-            _btnNavLowStock.Click += (s, e) => OpenLowStockView();
+            _btnNavStockIn.Click += (s, e) => OpenStockView("IN", 0);
+            _btnNavStockOut.Click += (s, e) => OpenStockView("OUT", 0);
+            _btnNavTxHistory.Click += (s, e) =>
+            {
+                NavigateTo(_btnNavTxHistory, _transactionHistoryForm);
+                _transactionHistoryForm.RefreshData();
+            };
 
             _btnNavReports.Click += (s, e) =>
             {
@@ -500,6 +515,8 @@ namespace InventoryManagementSystem.Forms
             _dashboardView.NavigateToLowStockRequested += () => OpenLowStockView();
             _dashboardView.NavigateToReportsRequested += () => _btnNavReports.PerformClick();
             _dashboardView.NavigateToActivityRequested += () => _btnNavActivity.PerformClick();
+            _dashboardView.NavigateToStockInRequested += () => OpenStockView("IN", 0);
+            _dashboardView.NavigateToStockOutRequested += () => OpenStockView("OUT", 0);
 
             // Wire cross-view updates
             _productsForm.QuickStockInRequested += productId => OpenStockView("IN", productId);
@@ -564,13 +581,16 @@ namespace InventoryManagementSystem.Forms
 
         private void OpenStockView(string mode, int preselectedProductId)
         {
-            NavigateTo(_btnNavStock, _stockTransactionForm);
+            GradientButton navBtn = SessionManager.IsAdmin
+                ? _btnNavStock
+                : (mode.Equals("OUT", StringComparison.OrdinalIgnoreCase) ? _btnNavStockOut : _btnNavStockIn);
+            NavigateTo(navBtn, _stockTransactionForm);
             _stockTransactionForm.SetTransactionMode(mode, preselectedProductId);
         }
 
         private void OpenLowStockView()
         {
-            NavigateTo(_btnNavLowStock, _lowStockForm);
+            NavigateTo(_btnNavProducts, _lowStockForm);
             _lowStockForm.RefreshData();
         }
 
@@ -625,6 +645,7 @@ namespace InventoryManagementSystem.Forms
             _categoriesForm.ApplyTheme();
             _suppliersForm.ApplyTheme();
             _stockTransactionForm.ApplyTheme();
+            _transactionHistoryForm.ApplyTheme();
             _lowStockForm.ApplyTheme();
             _reportsForm.ApplyTheme();
             _activityHistoryForm.ApplyTheme();
@@ -648,6 +669,7 @@ namespace InventoryManagementSystem.Forms
             else if (active == _categoriesForm) _categoriesForm.RefreshData();
             else if (active == _suppliersForm) _suppliersForm.RefreshData();
             else if (active == _stockTransactionForm) _stockTransactionForm.RefreshData();
+            else if (active == _transactionHistoryForm) _transactionHistoryForm.RefreshData();
             else if (active == _lowStockForm) _lowStockForm.RefreshData();
             else if (active == _reportsForm) _reportsForm.RefreshData();
             else if (active == _activityHistoryForm) _activityHistoryForm.RefreshData();

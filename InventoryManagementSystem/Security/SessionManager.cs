@@ -15,13 +15,20 @@ namespace InventoryManagementSystem.Security
         public static bool IsAdmin => IsAuthenticated && CurrentUser!.IsAdmin;
         public static bool IsStandardUser => IsAuthenticated && !CurrentUser!.IsAdmin;
 
+        public static bool CanManageProducts => IsAdmin;
         public static bool CanDeleteProducts => IsAdmin;
         public static bool CanManageCategories => IsAdmin;
         public static bool CanManageSuppliers => IsAdmin;
+        public static bool CanAdjustStock => IsAdmin;
         public static bool CanManageUsers => IsAdmin;
         public static bool CanViewActivityHistory => IsAdmin;
+        public static bool CanViewValuationReport => IsAdmin;
         public static bool CanAccessBackupRestore => IsAdmin;
         public static bool CanManageSettings => IsAdmin;
+
+        public static string CurrentActorLabel => CurrentUser != null
+            ? $"{CurrentUser.Username} ({CurrentUser.Role})"
+            : "System";
 
         public static event Action? SessionChanged;
 

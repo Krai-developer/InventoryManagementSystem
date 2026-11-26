@@ -153,7 +153,7 @@ namespace InventoryManagementSystem.Database
 
         public int AddProduct(Product product)
         {
-            SessionManager.RequireAuthenticated("add products");
+            SessionManager.RequireAdmin("add products");
 
             if (!product.Validate(out string validationError))
                 throw new ArgumentException(validationError);
@@ -232,7 +232,7 @@ namespace InventoryManagementSystem.Database
 
         public bool UpdateProduct(Product product)
         {
-            SessionManager.RequireAuthenticated("update products");
+            SessionManager.RequireAdmin("edit product master records");
 
             if (!product.Validate(out string validationError))
                 throw new ArgumentException(validationError);

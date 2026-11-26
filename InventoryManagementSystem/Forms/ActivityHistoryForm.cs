@@ -185,8 +185,9 @@ namespace InventoryManagementSystem.Forms
                     FillWeight = 18,
                     DefaultCellStyle = new DataGridViewCellStyle { Font = UITheme.FontBold, ForeColor = UITheme.ElectricBlue }
                 });
-                _dgvLogs.Columns.Add(new DataGridViewTextBoxColumn { Name = "Related", HeaderText = "Related Record", FillWeight = 24 });
-                _dgvLogs.Columns.Add(new DataGridViewTextBoxColumn { Name = "Details", HeaderText = "Details", FillWeight = 38 });
+                _dgvLogs.Columns.Add(new DataGridViewTextBoxColumn { Name = "Related", HeaderText = "Related Record", FillWeight = 20 });
+                _dgvLogs.Columns.Add(new DataGridViewTextBoxColumn { Name = "Actor", HeaderText = "Performed By", FillWeight = 16 });
+                _dgvLogs.Columns.Add(new DataGridViewTextBoxColumn { Name = "Details", HeaderText = "Details", FillWeight = 30 });
 
                 foreach (var log in logs)
                 {
@@ -195,6 +196,7 @@ namespace InventoryManagementSystem.Forms
                         log.ActivityDate.ToString("yyyy-MM-dd hh:mm tt"),
                         log.Action,
                         log.RelatedRecord,
+                        string.IsNullOrWhiteSpace(log.PerformedBy) ? "System" : log.PerformedBy,
                         log.Details);
                 }
 

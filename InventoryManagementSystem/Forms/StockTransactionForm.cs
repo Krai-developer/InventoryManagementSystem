@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -21,7 +22,10 @@ namespace InventoryManagementSystem.Forms
         private GlassCardPanel _entryCard = null!;
         private GradientButton _btnModeStockIn = null!;
         private GradientButton _btnModeStockOut = null!;
+        private GradientButton _btnModeAdjust = null!;
         private Label _lblFormBanner = null!;
+        private Label _lblQuantityCaption = null!;
+        private DateTimePicker _dtpTxDate = null!;
 
         private ComboBox _cboProduct = null!;
         private Label _lblSupplierCaption = null!;
@@ -68,11 +72,14 @@ namespace InventoryManagementSystem.Forms
 
             int y = 14;
 
+            bool canAdjust = SessionManager.CanAdjustStock;
+            int modeW = canAdjust ? 112 : 170;
+
             _btnModeStockIn = new GradientButton
             {
                 Text = "Stock In",
                 Location = new Point(16, y),
-                Size = new Size(170, 36),
+                Size = new Size(modeW, 36),
                 CornerRadius = 9
             };
             _btnModeStockIn.Click += (s, e) => SetTransactionMode("IN");
@@ -80,14 +87,25 @@ namespace InventoryManagementSystem.Forms
             _btnModeStockOut = new GradientButton
             {
                 Text = "Stock Out",
-                Location = new Point(194, y),
-                Size = new Size(170, 36),
+                Location = new Point(16 + modeW + 6, y),
+                Size = new Size(modeW, 36),
                 CornerRadius = 9
             };
             _btnModeStockOut.Click += (s, e) => SetTransactionMode("OUT");
 
+            _btnModeAdjust = new GradientButton
+            {
+                Text = "Adjust",
+                Location = new Point(16 + (modeW + 6) * 2, y),
+                Size = new Size(modeW, 36),
+                CornerRadius = 9,
+                Visible = canAdjust
+            };
+            _btnModeAdjust.Click += (s, e) => SetTransactionMode("ADJUST");
+
             _entryCard.Controls.Add(_btnModeStockIn);
             _entryCard.Controls.Add(_btnModeStockOut);
+            _entryCard.Controls.Add(_btnModeAdjust);
             y += 46;
 
             _lblFormBanner = new Label
@@ -155,19 +173,30 @@ namespace InventoryManagementSystem.Forms
             _entryCard.Controls.Add(_previewBox);
             y += 96;
 
-            _entryCard.Controls.Add(CreateLabel("Quantity *", 16, y));
+            _lblQuantityCaption = CreateLabel("Quantity *", 16, y);
+            _entryCard.Controls.Add(_lblQuantityCaption);
             y += 19;
             _numQuantity = new NumericUpDown
             {
-                Minimum = 1,
+                Minimum = 0,
                 Maximum = 100000,
                 Value = 1,
                 Location = new Point(16, y),
-                Size = new Size(348, 27)
+                Size = new Size(168, 27)
             };
             UITheme.StyleNumericUpDown(_numQuantity);
             _numQuantity.ValueChanged += (s, e) => UpdateProductPreview();
             _entryCard.Controls.Add(_numQuantity);
+
+            _entryCard.Controls.Add(CreateLabel("Transaction Date", 196, y - 19));
+            _dtpTxDate = new DateTimePicker
+            {
+                Format = DateTimePickerFormat.Short,
+                Location = new Point(196, y),
+                Size = new Size(168, 27),
+                Value = DateTime.Today
+            };
+            _entryCard.Controls.Add(_dtpTxDate);
             y += 35;
 
             _entryCard.Controls.Add(CreateLabel("Reference Number", 16, y));
@@ -275,40 +304,75 @@ namespace InventoryManagementSystem.Forms
 
         public void SetTransactionMode(string mode, int preselectedProductId = 0)
         {
-            _transactionType = mode.ToUpperInvariant() == "OUT" ? "OUT" : "IN";
+            string upper = (mode ?? "IN").ToUpperInvariant();
+            if (upper == "ADJUST" && !SessionManager.CanAdjustStock)
+            {
+                upper = "IN";
+            }
+            _transactionType = upper == "OUT" ? "OUT" : (upper == "ADJUST" ? "ADJUST" : "IN");
+
+            _btnModeStockIn.IsOutline = _transactionType != "IN";
+            _btnModeStockOut.IsOutline = _transactionType != "OUT";
+            _btnModeAdjust.IsOutline = _transactionType != "ADJUST";
 
             if (_transactionType == "IN")
             {
                 _entryCard.GlowAccent = UITheme.TealGlow;
-                _btnModeStockIn.IsOutline = false;
                 _btnModeStockIn.GradientStart = UITheme.TealGlow;
                 _btnModeStockIn.GradientEnd = UITheme.SuccessGreen;
-                _btnModeStockOut.IsOutline = true;
                 _lblFormBanner.Text = "Record Incoming Stock";
+                _lblQuantityCaption.Text = "Received Quantity *";
+                _numQuantity.Minimum = 1;
+                if (_numQuantity.Value < 1) _numQuantity.Value = 1;
                 _cboSupplier.Enabled = true;
                 _lblSupplierCaption.Text = "Supplier (for Stock In)";
+                _txtReferenceNo.PlaceholderText = "e.g., PO-2026-105";
                 _btnSubmit.GradientStart = UITheme.TealGlow;
                 _btnSubmit.GradientEnd = UITheme.SuccessGreen;
                 _btnSubmit.Text = "Save Stock In";
             }
-            else
+            else if (_transactionType == "OUT")
             {
                 _entryCard.GlowAccent = UITheme.WarningAmber;
-                _btnModeStockIn.IsOutline = true;
-                _btnModeStockOut.IsOutline = false;
                 _btnModeStockOut.GradientStart = Color.FromArgb(245, 158, 11);
                 _btnModeStockOut.GradientEnd = UITheme.WarningAmber;
                 _lblFormBanner.Text = "Record Outgoing Stock";
+                _lblQuantityCaption.Text = "Released Quantity *";
+                _numQuantity.Minimum = 1;
+                if (_numQuantity.Value < 1) _numQuantity.Value = 1;
                 _cboSupplier.Enabled = false;
                 _lblSupplierCaption.Text = "Supplier (N/A for Stock Out)";
+                _txtReferenceNo.PlaceholderText = "Reason (e.g., Customer Order, Dispatch)";
                 _btnSubmit.GradientStart = Color.FromArgb(245, 158, 11);
                 _btnSubmit.GradientEnd = UITheme.WarningAmber;
                 _btnSubmit.Text = "Save Stock Out";
             }
+            else
+            {
+                _entryCard.GlowAccent = UITheme.ElectricBlue;
+                _btnModeAdjust.GradientStart = UITheme.ElectricBlue;
+                _btnModeAdjust.GradientEnd = UITheme.PrimaryBlue;
+                _lblFormBanner.Text = "Controlled Stock Adjustment";
+                _lblQuantityCaption.Text = "New Target Stock *";
+                _numQuantity.Minimum = 0;
+                _cboSupplier.Enabled = false;
+                _lblSupplierCaption.Text = "Supplier (N/A for Adjustment)";
+                _txtReferenceNo.PlaceholderText = "Required adjustment reason (e.g., Audit Count)";
+                _btnSubmit.GradientStart = UITheme.ElectricBlue;
+                _btnSubmit.GradientEnd = UITheme.PrimaryBlue;
+                _btnSubmit.Text = "Save Stock Adjustment";
+            }
 
             _entryCard.Invalidate(true);
             RefreshData(preselectedProductId);
-            GenerateReferenceNumber();
+            if (_transactionType == "ADJUST")
+            {
+                _txtReferenceNo.Clear();
+            }
+            else
+            {
+                GenerateReferenceNumber();
+            }
         }
 
         private void GenerateReferenceNumber()
@@ -415,12 +479,14 @@ namespace InventoryManagementSystem.Forms
                 FillWeight = 11,
                 DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter, Font = UITheme.FontBold }
             });
-            _dgvHistory.Columns.Add(new DataGridViewTextBoxColumn { Name = "Ref", HeaderText = "Reference", FillWeight = 14 });
-            _dgvHistory.Columns.Add(new DataGridViewTextBoxColumn { Name = "Remarks", HeaderText = "Notes", FillWeight = 20 });
+            _dgvHistory.Columns.Add(new DataGridViewTextBoxColumn { Name = "Ref", HeaderText = "Ref / Reason", FillWeight = 14 });
+            _dgvHistory.Columns.Add(new DataGridViewTextBoxColumn { Name = "Actor", HeaderText = "By", FillWeight = 15 });
 
             foreach (var tx in history)
             {
-                string qtyDisplay = tx.TransactionType == "IN" ? $"+{tx.Quantity}" : $"-{tx.Quantity}";
+                string qtyDisplay = tx.TransactionType == "IN"
+                    ? $"+{tx.Quantity}"
+                    : (tx.TransactionType == "OUT" ? $"-{tx.Quantity}" : $"={tx.NewStock}");
                 _dgvHistory.Rows.Add(
                     tx.TransactionDate.ToString("yyyy-MM-dd HH:mm"),
                     tx.TransactionType,
@@ -430,7 +496,7 @@ namespace InventoryManagementSystem.Forms
                     qtyDisplay,
                     tx.NewStock,
                     tx.ReferenceNo,
-                    tx.Remarks);
+                    string.IsNullOrWhiteSpace(tx.PerformedBy) ? "System" : tx.PerformedBy);
             }
         }
 
@@ -443,6 +509,48 @@ namespace InventoryManagementSystem.Forms
             }
 
             int quantity = (int)_numQuantity.Value;
+            DateTime txDate = _dtpTxDate.Value.Date.Add(DateTime.Now.TimeOfDay);
+
+            if (_transactionType == "ADJUST")
+            {
+                if (!SessionManager.CanAdjustStock)
+                {
+                    MessageBox.Show("Access denied: Only the Administrator can perform stock adjustments.",
+                        "Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                try
+                {
+                    bool adjOk = _txRepo.RecordStockAdjustment(
+                        selectedProduct.ProductID,
+                        quantity,
+                        _txtReferenceNo.Text.Trim(),
+                        _txtRemarks.Text.Trim(),
+                        out string adjMsg,
+                        txDate);
+
+                    if (adjOk)
+                    {
+                        MessageBox.Show(adjMsg, "Adjustment Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        int keepId = selectedProduct.ProductID;
+                        _txtReferenceNo.Clear();
+                        _txtRemarks.Clear();
+                        RefreshData(keepId);
+                        StockMovementRecorded?.Invoke();
+                    }
+                    else
+                    {
+                        MessageBox.Show(adjMsg, "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                return;
+            }
+
             if (_transactionType == "OUT" && quantity > selectedProduct.QuantityInStock)
             {
                 MessageBox.Show(
@@ -465,7 +573,8 @@ namespace InventoryManagementSystem.Forms
                 _txtReferenceNo.Text.Trim(),
                 _txtRemarks.Text.Trim(),
                 out string resultMessage,
-                supplierId);
+                supplierId,
+                txDate);
 
             if (ok)
             {

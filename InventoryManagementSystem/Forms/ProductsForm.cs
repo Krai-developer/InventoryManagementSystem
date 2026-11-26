@@ -786,14 +786,36 @@ namespace InventoryManagementSystem.Forms
             LoadThumbFromFile(_currentImagePath, selected.SKU);
 
             _btnSave.Text = "Update Product";
+            _btnSave.Enabled = SessionManager.CanManageProducts;
+            _btnSave.Visible = SessionManager.CanManageProducts;
             _btnDelete.Enabled = SessionManager.CanDeleteProducts;
             _btnDelete.Visible = SessionManager.CanDeleteProducts;
+            _btnBrowseImage.Enabled = SessionManager.CanManageProducts;
+            _btnBrowseImage.Visible = SessionManager.CanManageProducts;
+            SetEditorReadOnly(!SessionManager.CanManageProducts);
+            if (!SessionManager.CanManageProducts)
+            {
+                _lblFormMode.Text = $"Product Details #{selected.ProductID} (View Only)";
+            }
+        }
+
+        private void SetEditorReadOnly(bool readOnly)
+        {
+            _txtSku.ReadOnly = readOnly;
+            _txtProductName.ReadOnly = readOnly;
+            _txtDescription.ReadOnly = readOnly;
+            _cboCategory.Enabled = !readOnly;
+            _cboSupplier.Enabled = !readOnly;
+            _numPurchasePrice.Enabled = !readOnly;
+            _numUnitPrice.Enabled = !readOnly;
+            _numReorderLevel.Enabled = !readOnly;
+            if (readOnly) _numInitialStock.Enabled = false;
         }
 
         private void ResetEditorForm()
         {
             _selectedProductId = 0;
-            _lblFormMode.Text = "Add Product";
+            _lblFormMode.Text = SessionManager.CanManageProducts ? "Add Product" : "Product Details (View Only)";
             _txtSku.Clear();
             _txtProductName.Clear();
             _txtDescription.Clear();
@@ -802,19 +824,31 @@ namespace InventoryManagementSystem.Forms
             _numPurchasePrice.Value = 0M;
             _numUnitPrice.Value = 0M;
             _numInitialStock.Value = 0;
-            _numInitialStock.Enabled = true;
+            _numInitialStock.Enabled = SessionManager.CanManageProducts;
             _lblInitialStockCaption.Text = "Opening Stock";
             _numReorderLevel.Value = 10;
             _currentImagePath = string.Empty;
             RenderDefaultThumb("IMG");
 
             _btnSave.Text = "Save Product";
+            _btnSave.Enabled = SessionManager.CanManageProducts;
+            _btnSave.Visible = SessionManager.CanManageProducts;
             _btnDelete.Enabled = false;
+            _btnDelete.Visible = SessionManager.CanDeleteProducts;
+            _btnBrowseImage.Enabled = SessionManager.CanManageProducts;
+            _btnBrowseImage.Visible = SessionManager.CanManageProducts;
+            SetEditorReadOnly(!SessionManager.CanManageProducts);
             _dgvProducts.ClearSelection();
         }
 
         private void BtnSave_Click(object? sender, EventArgs e)
         {
+            if (!SessionManager.CanManageProducts)
+            {
+                MessageBox.Show("Access denied: Standard Users have view-only access to product master records.",
+                    "Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             if (string.IsNullOrWhiteSpace(_txtSku.Text))
             {
                 MessageBox.Show("Product ID / SKU cannot be empty.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);

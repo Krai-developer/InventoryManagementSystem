@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -95,9 +96,12 @@ namespace InventoryManagementSystem.Forms
                 "3. Out-of-Stock Report",
                 "4. Stock-In Report",
                 "5. Stock-Out Report",
-                "6. Stock Movement History",
-                "7. Inventory Value Summary"
+                "6. Stock Movement History"
             });
+            if (SessionManager.CanViewValuationReport)
+            {
+                _cboReportType.Items.Add("7. Inventory Value Summary");
+            }
             _cboReportType.SelectedIndex = 0;
             _cboReportType.SelectedIndexChanged += (s, e) =>
             {

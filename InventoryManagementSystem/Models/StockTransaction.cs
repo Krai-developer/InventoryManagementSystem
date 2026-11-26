@@ -35,6 +35,7 @@ namespace InventoryManagementSystem.Models
         public int NewStock { get; set; }
         public string ReferenceNo { get; set; } = string.Empty;
         public string Remarks { get; set; } = string.Empty;
+        public string PerformedBy { get; set; } = string.Empty;
         public DateTime TransactionDate { get; set; } = DateTime.Now;
 
         public StockTransaction()

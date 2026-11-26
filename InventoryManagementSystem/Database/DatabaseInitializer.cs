@@ -111,12 +111,13 @@ namespace InventoryManagementSystem.Database
                                 TransactionID   INT IDENTITY(1,1) PRIMARY KEY,
                                 ProductID       INT NOT NULL,
                                 SupplierID      INT NULL,
-                                TransactionType NVARCHAR(10) NOT NULL CHECK (TransactionType IN ('IN', 'OUT')),
+                                TransactionType NVARCHAR(10) NOT NULL CHECK (TransactionType IN ('IN', 'OUT', 'ADJUST')),
                                 Quantity        INT NOT NULL CHECK (Quantity > 0),
                                 PreviousStock   INT NOT NULL,
                                 NewStock        INT NOT NULL,
                                 ReferenceNo     NVARCHAR(100) NULL,
                                 Remarks         NVARCHAR(255) NULL,
+                                PerformedBy     NVARCHAR(100) NULL,
                                 TransactionDate DATETIME NOT NULL DEFAULT GETDATE(),
                                 CONSTRAINT FK_StockTransactions_Products FOREIGN KEY (ProductID)
                                     REFERENCES dbo.Products(ProductID)
@@ -134,6 +135,22 @@ namespace InventoryManagementSystem.Database
                                 ALTER TABLE dbo.StockTransactions ADD CONSTRAINT FK_StockTransactions_Suppliers FOREIGN KEY (SupplierID)
                                     REFERENCES dbo.Suppliers(SupplierID) ON DELETE NO ACTION;
                             END
+
+                            IF COL_LENGTH('dbo.StockTransactions', 'PerformedBy') IS NULL
+                                ALTER TABLE dbo.StockTransactions ADD PerformedBy NVARCHAR(100) NULL;
+
+                            -- Allow controlled 'ADJUST' transaction type on existing databases
+                            DECLARE @chkName NVARCHAR(128);
+                            SELECT TOP 1 @chkName = cc.name
+                            FROM sys.check_constraints cc
+                            WHERE cc.parent_object_id = OBJECT_ID('dbo.StockTransactions')
+                              AND cc.definition LIKE '%TransactionType%'
+                              AND cc.definition NOT LIKE '%ADJUST%';
+                            IF @chkName IS NOT NULL
+                            BEGIN
+                                EXEC(N'ALTER TABLE dbo.StockTransactions DROP CONSTRAINT [' + @chkName + N'];');
+                                ALTER TABLE dbo.StockTransactions ADD CONSTRAINT CK_StockTransactions_Type CHECK (TransactionType IN ('IN', 'OUT', 'ADJUST'));
+                            END
                         END
 
                         -- 5. ActivityLogs Table
@@ -144,8 +161,14 @@ namespace InventoryManagementSystem.Database
                                 Action        NVARCHAR(100) NOT NULL,
                                 RelatedRecord NVARCHAR(200) NOT NULL,
                                 Details       NVARCHAR(500) NULL,
+                                PerformedBy   NVARCHAR(100) NULL,
                                 ActivityDate  DATETIME NOT NULL DEFAULT GETDATE()
                             );
+                        END
+                        ELSE
+                        BEGIN
+                            IF COL_LENGTH('dbo.ActivityLogs', 'PerformedBy') IS NULL
+                                ALTER TABLE dbo.ActivityLogs ADD PerformedBy NVARCHAR(100) NULL;
                         END
 
                         -- 6. Users Table (Authentication, Roles & Single-Admin Enforcement)

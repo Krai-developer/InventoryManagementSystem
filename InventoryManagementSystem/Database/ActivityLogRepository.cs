@@ -11,8 +11,8 @@ namespace InventoryManagementSystem.Database
         public void LogActivity(string action, string relatedRecord, string details)
         {
             string sql = @"
-                INSERT INTO dbo.ActivityLogs (Action, RelatedRecord, Details, ActivityDate)
-                VALUES (@Action, @RelatedRecord, @Details, GETDATE());";
+                INSERT INTO dbo.ActivityLogs (Action, RelatedRecord, Details, PerformedBy, ActivityDate)
+                VALUES (@Action, @RelatedRecord, @Details, @PerformedBy, GETDATE());";
 
             using (SqlConnection conn = DbConnection.GetConnection())
             using (SqlCommand cmd = new SqlCommand(sql, conn))
@@ -20,6 +20,7 @@ namespace InventoryManagementSystem.Database
                 cmd.Parameters.AddWithValue("@Action", (action ?? string.Empty).Trim());
                 cmd.Parameters.AddWithValue("@RelatedRecord", (relatedRecord ?? string.Empty).Trim());
                 cmd.Parameters.AddWithValue("@Details", string.IsNullOrWhiteSpace(details) ? DBNull.Value : details.Trim());
+                cmd.Parameters.AddWithValue("@PerformedBy", SessionManager.CurrentActorLabel);
 
                 conn.Open();
                 cmd.ExecuteNonQuery();
@@ -55,6 +56,7 @@ namespace InventoryManagementSystem.Database
                     Action,
                     RelatedRecord,
                     ISNULL(Details, N'') AS Details,
+                    ISNULL(PerformedBy, N'System') AS PerformedBy,
                     ActivityDate
                 FROM dbo.ActivityLogs
                 WHERE (@Action = N'ALL' OR Action = @Action)
@@ -63,7 +65,8 @@ namespace InventoryManagementSystem.Database
                   AND (@Keyword = N''
                        OR Action LIKE @Pattern
                        OR RelatedRecord LIKE @Pattern
-                       OR Details LIKE @Pattern)
+                       OR Details LIKE @Pattern
+                       OR PerformedBy LIKE @Pattern)
                 ORDER BY ActivityDate DESC, ActivityID DESC;";
 
             using (SqlConnection conn = DbConnection.GetConnection())
@@ -87,7 +90,8 @@ namespace InventoryManagementSystem.Database
                             Action = reader.GetString(1),
                             RelatedRecord = reader.GetString(2),
                             Details = reader.GetString(3),
-                            ActivityDate = reader.GetDateTime(4)
+                            PerformedBy = reader.GetString(4),
+                            ActivityDate = reader.GetDateTime(5)
                         });
                     }
                 }

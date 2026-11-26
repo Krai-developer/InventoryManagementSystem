@@ -31,6 +31,8 @@ namespace InventoryManagementSystem.Forms
         public event Action? NavigateToLowStockRequested;
         public event Action? NavigateToReportsRequested;
         public event Action? NavigateToActivityRequested;
+        public event Action? NavigateToStockInRequested;
+        public event Action? NavigateToStockOutRequested;
 
         // Header Controls
         private Label _lblWelcome = null!;
@@ -401,34 +403,50 @@ namespace InventoryManagementSystem.Forms
             qaGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             qaGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
-            var btnAdd = CreateQuickActionTile("Add Product", Color.FromArgb(37, 99, 235), Color.FromArgb(29, 78, 216));
-            btnAdd.Click += (s, e) => NavigateToProductsRequested?.Invoke();
-
-            var btnSearch = CreateQuickActionTile("Search Product", Color.FromArgb(16, 185, 129), Color.FromArgb(5, 150, 105));
-            btnSearch.Click += (s, e) =>
+            if (SessionManager.CanManageProducts)
             {
-                _txtSearch.Focus();
-                _txtSearch.SelectAll();
-            };
+                var btnAdd = CreateQuickActionTile("Add Product", Color.FromArgb(37, 99, 235), Color.FromArgb(29, 78, 216));
+                btnAdd.Click += (s, e) => NavigateToProductsRequested?.Invoke();
 
-            var btnUpdate = CreateQuickActionTile("Update Product", Color.FromArgb(124, 58, 237), Color.FromArgb(91, 33, 182));
-            btnUpdate.Click += (s, e) =>
+                var btnSearch = CreateQuickActionTile("Search Product", Color.FromArgb(16, 185, 129), Color.FromArgb(5, 150, 105));
+                btnSearch.Click += (s, e) => { _txtSearch.Focus(); _txtSearch.SelectAll(); };
+
+                var btnUpdate = CreateQuickActionTile("Update Product", Color.FromArgb(124, 58, 237), Color.FromArgb(91, 33, 182));
+                btnUpdate.Click += (s, e) =>
+                {
+                    if (_dgvInventory.CurrentRow?.Tag is Product p)
+                        NavigateToProductEditRequested?.Invoke(p.ProductID);
+                    else
+                        NavigateToProductsRequested?.Invoke();
+                };
+
+                var btnDelete = CreateQuickActionTile("Delete Product", Color.FromArgb(239, 68, 68), Color.FromArgb(185, 28, 28));
+                btnDelete.Click += (s, e) => DeleteSelectedFromDashboard();
+
+                qaGrid.Controls.Add(btnAdd, 0, 0);
+                qaGrid.Controls.Add(btnSearch, 1, 0);
+                qaGrid.Controls.Add(btnUpdate, 0, 1);
+                qaGrid.Controls.Add(btnDelete, 1, 1);
+            }
+            else
             {
-                if (_dgvInventory.CurrentRow?.Tag is Product p)
-                    NavigateToProductEditRequested?.Invoke(p.ProductID);
-                else
-                    NavigateToProductsRequested?.Invoke();
-            };
+                var btnStockIn = CreateQuickActionTile("Stock In", Color.FromArgb(16, 185, 129), Color.FromArgb(5, 150, 105));
+                btnStockIn.Click += (s, e) => NavigateToStockInRequested?.Invoke();
 
-            var btnDelete = CreateQuickActionTile("Delete Product", Color.FromArgb(239, 68, 68), Color.FromArgb(185, 28, 28));
-            btnDelete.Enabled = SessionManager.CanDeleteProducts;
-            btnDelete.Visible = SessionManager.CanDeleteProducts;
-            btnDelete.Click += (s, e) => DeleteSelectedFromDashboard();
+                var btnStockOut = CreateQuickActionTile("Stock Out", Color.FromArgb(245, 158, 11), Color.FromArgb(180, 83, 9));
+                btnStockOut.Click += (s, e) => NavigateToStockOutRequested?.Invoke();
 
-            qaGrid.Controls.Add(btnAdd, 0, 0);
-            qaGrid.Controls.Add(btnSearch, 1, 0);
-            qaGrid.Controls.Add(btnUpdate, 0, 1);
-            qaGrid.Controls.Add(btnDelete, 1, 1);
+                var btnSearch = CreateQuickActionTile("Search Product", Color.FromArgb(37, 99, 235), Color.FromArgb(29, 78, 216));
+                btnSearch.Click += (s, e) => { _txtSearch.Focus(); _txtSearch.SelectAll(); };
+
+                var btnView = CreateQuickActionTile("View Products", Color.FromArgb(124, 58, 237), Color.FromArgb(91, 33, 182));
+                btnView.Click += (s, e) => NavigateToProductsRequested?.Invoke();
+
+                qaGrid.Controls.Add(btnStockIn, 0, 0);
+                qaGrid.Controls.Add(btnStockOut, 1, 0);
+                qaGrid.Controls.Add(btnSearch, 0, 1);
+                qaGrid.Controls.Add(btnView, 1, 1);
+            }
 
             quickCard.Controls.Add(qaGrid);
             quickCard.Controls.Add(lblQuickTitle);
@@ -927,7 +945,7 @@ namespace InventoryManagementSystem.Forms
                     p.QuantityInStock,
                     p.UnitPrice.ToString("N2"),
                     p.StockStatus,
-                    SessionManager.CanDeleteProducts ? "Edit  |  Del" : "Edit");
+                    SessionManager.CanManageProducts ? "Edit  |  Del" : "View");
                 _dgvInventory.Rows[idx].Tag = p;
             }
 
@@ -963,9 +981,16 @@ namespace InventoryManagementSystem.Forms
             {
                 ConfirmAndDeleteProduct(p);
             }
-            else
+            else if (SessionManager.CanManageProducts)
             {
                 NavigateToProductEditRequested?.Invoke(p.ProductID);
+            }
+            else
+            {
+                using (var dlg = new ProductDetailsDialog(p))
+                {
+                    dlg.ShowDialog(FindForm());
+                }
             }
         }
 

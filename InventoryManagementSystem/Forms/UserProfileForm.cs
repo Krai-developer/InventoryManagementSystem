@@ -201,8 +201,8 @@ namespace InventoryManagementSystem.Forms
                 $"Registered: {user.CreatedAt:MMM dd, yyyy}   |   Last Login: {lastLogin}";
 
             _lblRoleSummary.Text = user.IsAdmin
-                ? "Permissions (Admin):\n• Full access to Dashboard, Products (incl. Delete), Categories, Suppliers\n• Stock-In / Stock-Out, Reports, Activity History\n• User Management, Backup & Restore, Application Settings"
-                : "Permissions (Standard User):\n• Access Dashboard, View/Search/Add/Update Products\n• Record Stock-In / Stock-Out, View Reports\n• Restricted: Product Delete, Categories, Suppliers, Activity History, Users, Backup/Settings\n• Account roles cannot be changed by standard users.";
+                ? "Permissions (Admin):\n• Full access to Dashboard, Products (Add/Edit/Delete), Categories, Suppliers\n• Stock-In / Stock-Out / Controlled Stock Adjustments, All 7 Reports, Activity History\n• User Management, Backup & Restore, Application Settings"
+                : "Permissions (Inventory Staff — User):\n• Access Dashboard, View & Search Products (View-Only), Low-Stock Alerts\n• Record Stock-In & Stock-Out, View Transaction History & Permitted Reports\n• Restricted: Add/Edit/Delete Products, Categories, Suppliers, Adjustments, Activity History, Users, Settings";
         }
 
         private void BtnUpdatePwd_Click(object? sender, EventArgs e)

@@ -8,6 +8,7 @@ namespace InventoryManagementSystem.Models
         public string Action { get; set; } = string.Empty;
         public string RelatedRecord { get; set; } = string.Empty;
         public string Details { get; set; } = string.Empty;
+        public string PerformedBy { get; set; } = string.Empty;
         public DateTime ActivityDate { get; set; } = DateTime.Now;
 
         public ActivityLog()

@@ -15,7 +15,8 @@ namespace InventoryManagementSystem.Database
             string referenceNo,
             string remarks,
             out string message,
-            int? supplierId = null)
+            int? supplierId = null,
+            DateTime? transactionDate = null)
         {
             SessionManager.RequireAuthenticated("record stock transactions");
 
@@ -96,9 +97,9 @@ namespace InventoryManagementSystem.Database
 
                         string insertSql = @"
                             INSERT INTO dbo.StockTransactions
-                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, TransactionDate)
+                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, PerformedBy, TransactionDate)
                             VALUES
-                                (@ProductID, @SupplierID, @TransactionType, @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, GETDATE());";
+                                (@ProductID, @SupplierID, @TransactionType, @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @PerformedBy, @TransactionDate);";
 
                         using (SqlCommand insertCmd = new SqlCommand(insertSql, conn, tx))
                         {
@@ -110,6 +111,8 @@ namespace InventoryManagementSystem.Database
                             insertCmd.Parameters.AddWithValue("@NewStock", newStock);
                             insertCmd.Parameters.AddWithValue("@ReferenceNo", string.IsNullOrWhiteSpace(referenceNo) ? DBNull.Value : referenceNo.Trim());
                             insertCmd.Parameters.AddWithValue("@Remarks", string.IsNullOrWhiteSpace(remarks) ? DBNull.Value : remarks.Trim());
+                            insertCmd.Parameters.AddWithValue("@PerformedBy", SessionManager.CurrentActorLabel);
+                            insertCmd.Parameters.AddWithValue("@TransactionDate", transactionDate ?? DateTime.Now);
 
                             insertCmd.ExecuteNonQuery();
                         }
@@ -135,6 +138,112 @@ namespace InventoryManagementSystem.Database
             }
         }
 
+        /// <summary>
+        /// Controlled Administrator-only inventory stock adjustment with mandatory reason and full audit history.
+        /// </summary>
+        public bool RecordStockAdjustment(
+            int productId,
+            int targetNewStock,
+            string reason,
+            string remarks,
+            out string message,
+            DateTime? transactionDate = null)
+        {
+            SessionManager.RequireAdmin("perform controlled stock adjustments");
+            message = string.Empty;
+
+            if (targetNewStock < 0)
+            {
+                message = "Adjusted stock quantity cannot be negative.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                message = "A reason is required for every controlled stock adjustment.";
+                return false;
+            }
+
+            using (SqlConnection conn = DbConnection.GetConnection())
+            {
+                conn.Open();
+                using (SqlTransaction tx = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        int currentStock;
+                        string productName;
+                        string sku;
+
+                        using (SqlCommand selectCmd = new SqlCommand(
+                            "SELECT QuantityInStock, ProductName, SKU FROM dbo.Products WITH (UPDLOCK, ROWLOCK) WHERE ProductID = @ProductID;", conn, tx))
+                        {
+                            selectCmd.Parameters.AddWithValue("@ProductID", productId);
+                            using (SqlDataReader r = selectCmd.ExecuteReader())
+                            {
+                                if (!r.Read())
+                                {
+                                    tx.Rollback();
+                                    message = "Selected product was not found.";
+                                    return false;
+                                }
+                                currentStock = r.GetInt32(0);
+                                productName = r.GetString(1);
+                                sku = r.GetString(2);
+                            }
+                        }
+
+                        int delta = Math.Abs(targetNewStock - currentStock);
+                        if (delta == 0)
+                        {
+                            tx.Rollback();
+                            message = "New stock quantity matches current stock. No adjustment needed.";
+                            return false;
+                        }
+
+                        using (SqlCommand updateCmd = new SqlCommand(
+                            "UPDATE dbo.Products SET QuantityInStock = @NewStock WHERE ProductID = @ProductID;", conn, tx))
+                        {
+                            updateCmd.Parameters.AddWithValue("@NewStock", targetNewStock);
+                            updateCmd.Parameters.AddWithValue("@ProductID", productId);
+                            updateCmd.ExecuteNonQuery();
+                        }
+
+                        using (SqlCommand insertCmd = new SqlCommand(@"
+                            INSERT INTO dbo.StockTransactions
+                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, PerformedBy, TransactionDate)
+                            VALUES
+                                (@ProductID, NULL, N'ADJUST', @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @PerformedBy, @TransactionDate);", conn, tx))
+                        {
+                            insertCmd.Parameters.AddWithValue("@ProductID", productId);
+                            insertCmd.Parameters.AddWithValue("@Quantity", delta);
+                            insertCmd.Parameters.AddWithValue("@PreviousStock", currentStock);
+                            insertCmd.Parameters.AddWithValue("@NewStock", targetNewStock);
+                            insertCmd.Parameters.AddWithValue("@ReferenceNo", reason.Trim());
+                            insertCmd.Parameters.AddWithValue("@Remarks", string.IsNullOrWhiteSpace(remarks) ? DBNull.Value : remarks.Trim());
+                            insertCmd.Parameters.AddWithValue("@PerformedBy", SessionManager.CurrentActorLabel);
+                            insertCmd.Parameters.AddWithValue("@TransactionDate", transactionDate ?? DateTime.Now);
+                            insertCmd.ExecuteNonQuery();
+                        }
+
+                        tx.Commit();
+
+                        ActivityLogRepository.LogSafe("Stock Adjusted", $"{sku} - {productName}",
+                            $"Adjusted stock {currentStock} -> {targetNewStock}. Reason: {reason.Trim()}");
+
+                        message = $"Stock adjustment recorded! '{productName}' adjusted from {currentStock} to {targetNewStock}.";
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        tx.Rollback();
+                        message = $"Stock adjustment failed: {ex.Message}";
+                        return false;
+                    }
+                }
+            }
+        }
+
         public List<StockTransaction> GetTransactions(
             DateTime? fromDate = null,
             DateTime? toDate = null,
@@ -143,7 +252,8 @@ namespace InventoryManagementSystem.Database
             string searchKeyword = "",
             int maxRows = 500,
             int productId = 0,
-            int supplierId = 0)
+            int supplierId = 0,
+            string performedByFilter = "")
         {
             var list = new List<StockTransaction>();
 
@@ -162,6 +272,7 @@ namespace InventoryManagementSystem.Database
                     t.NewStock,
                     ISNULL(t.ReferenceNo, N'') AS ReferenceNo,
                     ISNULL(t.Remarks, N'') AS Remarks,
+                    ISNULL(t.PerformedBy, N'System') AS PerformedBy,
                     t.TransactionDate
                 FROM dbo.StockTransactions t
                 INNER JOIN dbo.Products p ON t.ProductID = p.ProductID
@@ -172,23 +283,28 @@ namespace InventoryManagementSystem.Database
                   AND (@CategoryID = 0 OR p.CategoryID = @CategoryID)
                   AND (@ProductID = 0 OR t.ProductID = @ProductID)
                   AND (@SupplierID = 0 OR t.SupplierID = @SupplierID OR p.SupplierID = @SupplierID)
+                  AND (@PerformedBy = N'' OR ISNULL(t.PerformedBy, N'') LIKE @PerformedByPattern)
                   AND (@FromDate IS NULL OR t.TransactionDate >= @FromDate)
                   AND (@ToDate IS NULL OR t.TransactionDate < @ToDate)
                   AND (@Keyword = N'' 
                        OR p.SKU LIKE @Pattern 
                        OR p.ProductName LIKE @Pattern 
                        OR t.ReferenceNo LIKE @Pattern 
-                       OR t.Remarks LIKE @Pattern)
+                       OR t.Remarks LIKE @Pattern
+                       OR ISNULL(t.PerformedBy, N'') LIKE @Pattern)
                 ORDER BY t.TransactionDate DESC, t.TransactionID DESC;";
 
             using (SqlConnection conn = DbConnection.GetConnection())
             using (SqlCommand cmd = new SqlCommand(sql, conn))
             {
                 string trimmedKeyword = (searchKeyword ?? string.Empty).Trim();
+                string trimmedActor = (performedByFilter ?? string.Empty).Trim();
                 cmd.Parameters.AddWithValue("@Type", (transactionType ?? "ALL").ToUpperInvariant());
                 cmd.Parameters.AddWithValue("@CategoryID", categoryId);
                 cmd.Parameters.AddWithValue("@ProductID", productId);
                 cmd.Parameters.AddWithValue("@SupplierID", supplierId);
+                cmd.Parameters.AddWithValue("@PerformedBy", trimmedActor);
+                cmd.Parameters.AddWithValue("@PerformedByPattern", $"%{trimmedActor}%");
                 cmd.Parameters.AddWithValue("@FromDate", fromDate.HasValue ? fromDate.Value.Date : DBNull.Value);
                 cmd.Parameters.AddWithValue("@ToDate", toDate.HasValue ? toDate.Value.Date.AddDays(1) : DBNull.Value);
                 cmd.Parameters.AddWithValue("@Keyword", trimmedKeyword);
@@ -214,7 +330,8 @@ namespace InventoryManagementSystem.Database
                             NewStock = reader.GetInt32(10),
                             ReferenceNo = reader.GetString(11),
                             Remarks = reader.GetString(12),
-                            TransactionDate = reader.GetDateTime(13)
+                            PerformedBy = reader.GetString(13),
+                            TransactionDate = reader.GetDateTime(14)
                         });
                     }
                 }
