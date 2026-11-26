@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 
 namespace InventoryManagementSystem.Database
 {
@@ -44,6 +45,8 @@ namespace InventoryManagementSystem.Database
             string searchKeyword = "",
             int maxRows = 250)
         {
+            SessionManager.RequireAdmin("view activity history");
+
             var logs = new List<ActivityLog>();
 
             string sql = $@"

@@ -19,6 +19,7 @@ namespace InventoryManagementSystem.Security
         public static bool CanManageCategories => IsAdmin;
         public static bool CanManageSuppliers => IsAdmin;
         public static bool CanManageUsers => IsAdmin;
+        public static bool CanViewActivityHistory => IsAdmin;
         public static bool CanAccessBackupRestore => IsAdmin;
         public static bool CanManageSettings => IsAdmin;
 

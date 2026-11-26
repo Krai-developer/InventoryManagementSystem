@@ -478,10 +478,12 @@ namespace InventoryManagementSystem.Forms
                 BackColor = Color.Transparent,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 Location = new Point(actTop.Width - 76, 4),
-                AutoSize = true
+                AutoSize = true,
+                Visible = SessionManager.CanViewActivityHistory
             };
             lnkViewAll.LinkClicked += (s, e) =>
             {
+                if (!SessionManager.CanViewActivityHistory) return;
                 if (NavigateToActivityRequested != null) NavigateToActivityRequested.Invoke();
                 else NavigateToReportsRequested?.Invoke();
             };
@@ -1019,6 +1021,22 @@ namespace InventoryManagementSystem.Forms
         private void LoadRecentActivity()
         {
             _pnlActivityList.Controls.Clear();
+
+            if (!SessionManager.CanViewActivityHistory)
+            {
+                var lblRestricted = new Label
+                {
+                    Text = "Activity history is visible to the Administrator only.",
+                    Font = UITheme.FontSmall,
+                    ForeColor = UITheme.TextMuted,
+                    BackColor = Color.Transparent,
+                    Location = new Point(4, 18),
+                    AutoSize = true
+                };
+                _pnlActivityList.Controls.Add(lblRestricted);
+                return;
+            }
+
             List<ActivityLog> logs = _activityRepo.GetActivities(maxRows: 3);
 
             if (logs.Count == 0)

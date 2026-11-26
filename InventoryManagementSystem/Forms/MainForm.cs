@@ -225,9 +225,9 @@ namespace InventoryManagementSystem.Forms
 
             var mnuReports = CreateTopMenu("&Reports");
             mnuReports.DropDownItems.Add(CreateSubMenu("Inventory &Reports & CSV Export", (s, e) => _btnNavReports.PerformClick()));
-            mnuReports.DropDownItems.Add(CreateSubMenu("&Activity History", (s, e) => _btnNavActivity.PerformClick()));
             if (SessionManager.IsAdmin)
             {
+                mnuReports.DropDownItems.Add(CreateSubMenu("&Activity History", (s, e) => _btnNavActivity.PerformClick()));
                 mnuReports.DropDownItems.Add(new ToolStripSeparator());
                 mnuReports.DropDownItems.Add(CreateSubMenu("&User Management", (s, e) => _btnNavUsers.PerformClick()));
                 mnuReports.DropDownItems.Add(CreateSubMenu("&Settings / Backup & Restore", (s, e) => _btnNavSettings.PerformClick()));
@@ -316,7 +316,7 @@ namespace InventoryManagementSystem.Forms
             _btnNavStock      = CreateSidebarNavButton("Stock In / Out", ref navY, visible: true);
             _btnNavLowStock   = CreateSidebarNavButton("Low Stock", ref navY, visible: true);
             _btnNavReports    = CreateSidebarNavButton("Reports", ref navY, visible: true);
-            _btnNavActivity   = CreateSidebarNavButton("Activity", ref navY, visible: true);
+            _btnNavActivity   = CreateSidebarNavButton("Activity", ref navY, visible: isAdmin);
             _btnNavUsers      = CreateSidebarNavButton("Users", ref navY, visible: isAdmin);
             _btnNavSettings   = CreateSidebarNavButton("Settings", ref navY, visible: isAdmin);
             _btnNavProfile    = CreateSidebarNavButton("My Profile", ref navY, visible: true);
@@ -465,6 +465,7 @@ namespace InventoryManagementSystem.Forms
 
             _btnNavActivity.Click += (s, e) =>
             {
+                if (!EnsureAdminAccess("view activity history")) return;
                 NavigateTo(_btnNavActivity, _activityHistoryForm);
                 _activityHistoryForm.RefreshData();
             };
@@ -581,7 +582,7 @@ namespace InventoryManagementSystem.Forms
                 return;
             }
 
-            if ((view == _categoriesForm || view == _suppliersForm || view == _userManagementForm || view == _settingsForm)
+            if ((view == _categoriesForm || view == _suppliersForm || view == _activityHistoryForm || view == _userManagementForm || view == _settingsForm)
                 && !SessionManager.IsAdmin)
             {
                 MessageBox.Show("Access denied: This section is restricted to the Administrator.",
