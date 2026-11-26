@@ -92,3 +92,32 @@ BEGIN
     );
 END
 GO
+
+
+-- 6. Users Table & Single-Admin Filtered Unique Index
+IF OBJECT_ID('dbo.Users', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Users (
+        UserID              INT IDENTITY(1,1) PRIMARY KEY,
+        FullName            NVARCHAR(120) NOT NULL,
+        Username            NVARCHAR(60) NOT NULL UNIQUE,
+        EmailAddress        NVARCHAR(150) NOT NULL UNIQUE,
+        PasswordHash        NVARCHAR(256) NOT NULL,
+        PasswordSalt        NVARCHAR(128) NOT NULL,
+        Role                NVARCHAR(20) NOT NULL CHECK (Role IN ('Admin', 'User')),
+        IsActive            BIT NOT NULL DEFAULT 1,
+        FailedLoginAttempts INT NOT NULL DEFAULT 0,
+        LockoutUntil        DATETIME NULL,
+        CreatedAt           DATETIME NOT NULL DEFAULT GETDATE(),
+        LastLoginAt         DATETIME NULL
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Users_SingleAdmin' AND object_id = OBJECT_ID('dbo.Users'))
+BEGIN
+    CREATE UNIQUE INDEX UX_Users_SingleAdmin
+    ON dbo.Users (Role)
+    WHERE Role = N'Admin';
+END
+GO

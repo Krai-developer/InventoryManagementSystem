@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 
 namespace InventoryManagementSystem.Database
 {
@@ -152,6 +153,8 @@ namespace InventoryManagementSystem.Database
 
         public int AddProduct(Product product)
         {
+            SessionManager.RequireAuthenticated("add products");
+
             if (!product.Validate(out string validationError))
                 throw new ArgumentException(validationError);
 
@@ -229,6 +232,8 @@ namespace InventoryManagementSystem.Database
 
         public bool UpdateProduct(Product product)
         {
+            SessionManager.RequireAuthenticated("update products");
+
             if (!product.Validate(out string validationError))
                 throw new ArgumentException(validationError);
 
@@ -277,6 +282,8 @@ namespace InventoryManagementSystem.Database
 
         public bool DeleteProduct(int productId)
         {
+            SessionManager.RequireAdmin("delete products");
+
             Product? existing = GetProductById(productId);
             string sql = "DELETE FROM dbo.Products WHERE ProductID = @ProductID;";
 

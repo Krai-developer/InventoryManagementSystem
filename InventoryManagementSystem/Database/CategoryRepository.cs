@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 
 namespace InventoryManagementSystem.Database
 {
@@ -67,6 +68,8 @@ namespace InventoryManagementSystem.Database
 
         public int AddCategory(Category category)
         {
+            SessionManager.RequireAdmin("add categories");
+
             if (!category.Validate(out string err))
                 throw new ArgumentException(err);
 
@@ -98,6 +101,8 @@ namespace InventoryManagementSystem.Database
 
         public bool UpdateCategory(Category category)
         {
+            SessionManager.RequireAdmin("update categories");
+
             if (!category.Validate(out string err))
                 throw new ArgumentException(err);
 
@@ -144,6 +149,8 @@ namespace InventoryManagementSystem.Database
 
         public bool DeleteCategory(int categoryId, out string errorMessage)
         {
+            SessionManager.RequireAdmin("delete categories");
+
             errorMessage = string.Empty;
 
             int assignedProducts = GetAssignedProductCount(categoryId);

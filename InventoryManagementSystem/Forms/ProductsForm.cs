@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -785,7 +786,8 @@ namespace InventoryManagementSystem.Forms
             LoadThumbFromFile(_currentImagePath, selected.SKU);
 
             _btnSave.Text = "Update Product";
-            _btnDelete.Enabled = true;
+            _btnDelete.Enabled = SessionManager.CanDeleteProducts;
+            _btnDelete.Visible = SessionManager.CanDeleteProducts;
         }
 
         private void ResetEditorForm()
@@ -893,6 +895,13 @@ namespace InventoryManagementSystem.Forms
 
         private void BtnDelete_Click(object? sender, EventArgs e)
         {
+            if (!SessionManager.CanDeleteProducts)
+            {
+                MessageBox.Show("Access denied: Only the Administrator can delete products.",
+                    "Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (_selectedProductId <= 0)
             {
                 MessageBox.Show("Select a product to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Information);

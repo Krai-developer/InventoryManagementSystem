@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 
 namespace InventoryManagementSystem.Database
 {
@@ -78,6 +79,8 @@ namespace InventoryManagementSystem.Database
 
         public int AddSupplier(Supplier supplier)
         {
+            SessionManager.RequireAdmin("add suppliers");
+
             if (!supplier.Validate(out string err))
                 throw new ArgumentException(err);
 
@@ -111,6 +114,8 @@ namespace InventoryManagementSystem.Database
 
         public bool UpdateSupplier(Supplier supplier)
         {
+            SessionManager.RequireAdmin("update suppliers");
+
             if (!supplier.Validate(out string err))
                 throw new ArgumentException(err);
 
@@ -149,6 +154,8 @@ namespace InventoryManagementSystem.Database
 
         public bool DeleteSupplier(int supplierId, out string errorMessage)
         {
+            SessionManager.RequireAdmin("delete suppliers");
+
             errorMessage = string.Empty;
 
             using (SqlConnection conn = DbConnection.GetConnection())

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -42,8 +43,9 @@ namespace InventoryManagementSystem.Forms
         private GradientButton _btnNavLowStock = null!;
         private GradientButton _btnNavReports = null!;
         private GradientButton _btnNavActivity = null!;
+        private GradientButton _btnNavUsers = null!;
         private GradientButton _btnNavSettings = null!;
-        private GradientButton _btnNavAbout = null!;
+        private GradientButton _btnNavProfile = null!;
         private readonly List<GradientButton> _navButtons = new List<GradientButton>();
         private GradientButton? _activeNavButton;
 
@@ -55,10 +57,15 @@ namespace InventoryManagementSystem.Forms
         private LowStockForm _lowStockForm = null!;
         private ReportsForm _reportsForm = null!;
         private ActivityHistoryForm _activityHistoryForm = null!;
+        private UserManagementForm _userManagementForm = null!;
         private SettingsForm _settingsForm = null!;
+        private UserProfileForm _userProfileForm = null!;
+
+        public bool LoggedOut { get; private set; } = false;
 
         public MainForm(string dbStatusMessage)
         {
+            SessionManager.RequireAuthenticated("access the main application");
             _ = dbStatusMessage;
 
             Text = "Inventory and Stock Management System";
@@ -198,14 +205,19 @@ namespace InventoryManagementSystem.Forms
 
             var mnuFile = CreateTopMenu("&File");
             mnuFile.DropDownItems.Add(CreateSubMenu("&Refresh View", (s, e) => RefreshActiveView(), Keys.F5));
+            mnuFile.DropDownItems.Add(CreateSubMenu("My &Profile", (s, e) => _btnNavProfile.PerformClick()));
             mnuFile.DropDownItems.Add(new ToolStripSeparator());
+            mnuFile.DropDownItems.Add(CreateSubMenu("&Logout", (s, e) => PerformLogout()));
             mnuFile.DropDownItems.Add(CreateSubMenu("E&xit", (s, e) => Close(), Keys.Alt | Keys.F4));
 
             var mnuInventory = CreateTopMenu("&Inventory");
             mnuInventory.DropDownItems.Add(CreateSubMenu("&Dashboard", (s, e) => _btnNavDashboard.PerformClick()));
             mnuInventory.DropDownItems.Add(CreateSubMenu("&Products", (s, e) => _btnNavProducts.PerformClick()));
-            mnuInventory.DropDownItems.Add(CreateSubMenu("&Categories", (s, e) => _btnNavCategories.PerformClick()));
-            mnuInventory.DropDownItems.Add(CreateSubMenu("&Suppliers", (s, e) => _btnNavSuppliers.PerformClick()));
+            if (SessionManager.IsAdmin)
+            {
+                mnuInventory.DropDownItems.Add(CreateSubMenu("&Categories", (s, e) => _btnNavCategories.PerformClick()));
+                mnuInventory.DropDownItems.Add(CreateSubMenu("&Suppliers", (s, e) => _btnNavSuppliers.PerformClick()));
+            }
             mnuInventory.DropDownItems.Add(new ToolStripSeparator());
             mnuInventory.DropDownItems.Add(CreateSubMenu("Stock &In", (s, e) => OpenStockView("IN", 0)));
             mnuInventory.DropDownItems.Add(CreateSubMenu("Stock &Out", (s, e) => OpenStockView("OUT", 0)));
@@ -214,8 +226,12 @@ namespace InventoryManagementSystem.Forms
             var mnuReports = CreateTopMenu("&Reports");
             mnuReports.DropDownItems.Add(CreateSubMenu("Inventory &Reports & CSV Export", (s, e) => _btnNavReports.PerformClick()));
             mnuReports.DropDownItems.Add(CreateSubMenu("&Activity History", (s, e) => _btnNavActivity.PerformClick()));
-            mnuReports.DropDownItems.Add(new ToolStripSeparator());
-            mnuReports.DropDownItems.Add(CreateSubMenu("&Settings / Backup & Restore", (s, e) => _btnNavSettings.PerformClick()));
+            if (SessionManager.IsAdmin)
+            {
+                mnuReports.DropDownItems.Add(new ToolStripSeparator());
+                mnuReports.DropDownItems.Add(CreateSubMenu("&User Management", (s, e) => _btnNavUsers.PerformClick()));
+                mnuReports.DropDownItems.Add(CreateSubMenu("&Settings / Backup & Restore", (s, e) => _btnNavSettings.PerformClick()));
+            }
 
             var mnuHelp = CreateTopMenu("&Help");
             mnuHelp.DropDownItems.Add(CreateSubMenu("&About Inventory Pro", (s, e) => ShowAboutDialog()));
@@ -290,31 +306,33 @@ namespace InventoryManagementSystem.Forms
             _sidebarPanel.Controls.Add(lblBrandName);
             _sidebarPanel.Controls.Add(lblBrandSub);
 
-            // Navigation Pill Buttons
-            int navY = 152;
-            _btnNavDashboard  = CreateSidebarNavButton("Dashboard", ref navY);
-            _btnNavProducts   = CreateSidebarNavButton("Products", ref navY);
-            _btnNavCategories = CreateSidebarNavButton("Categories", ref navY);
-            _btnNavSuppliers  = CreateSidebarNavButton("Suppliers", ref navY);
-            _btnNavStock      = CreateSidebarNavButton("Stock In / Out", ref navY);
-            _btnNavLowStock   = CreateSidebarNavButton("Low Stock", ref navY);
-            _btnNavReports    = CreateSidebarNavButton("Reports", ref navY);
-            _btnNavActivity   = CreateSidebarNavButton("Activity", ref navY);
-            _btnNavSettings   = CreateSidebarNavButton("Settings", ref navY);
-            _btnNavAbout      = CreateSidebarNavButton("About", ref navY);
+            // Navigation Pill Buttons (dynamically laid out so User role has no empty gaps)
+            bool isAdmin = SessionManager.IsAdmin;
+            int navY = 148;
+            _btnNavDashboard  = CreateSidebarNavButton("Dashboard", ref navY, visible: true);
+            _btnNavProducts   = CreateSidebarNavButton("Products", ref navY, visible: true);
+            _btnNavCategories = CreateSidebarNavButton("Categories", ref navY, visible: isAdmin);
+            _btnNavSuppliers  = CreateSidebarNavButton("Suppliers", ref navY, visible: isAdmin);
+            _btnNavStock      = CreateSidebarNavButton("Stock In / Out", ref navY, visible: true);
+            _btnNavLowStock   = CreateSidebarNavButton("Low Stock", ref navY, visible: true);
+            _btnNavReports    = CreateSidebarNavButton("Reports", ref navY, visible: true);
+            _btnNavActivity   = CreateSidebarNavButton("Activity", ref navY, visible: true);
+            _btnNavUsers      = CreateSidebarNavButton("Users", ref navY, visible: isAdmin);
+            _btnNavSettings   = CreateSidebarNavButton("Settings", ref navY, visible: isAdmin);
+            _btnNavProfile    = CreateSidebarNavButton("My Profile", ref navY, visible: true);
 
-            // Bottom Dark Mode Toggle Card inside Sidebar
+            // Bottom Logout + Dark Mode Panel inside Sidebar
             var darkModePanel = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 62,
+                Height = 104,
                 BackColor = Color.Transparent,
-                Padding = new Padding(14, 10, 14, 12)
+                Padding = new Padding(14, 6, 14, 10)
             };
             darkModePanel.Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                Rectangle box = new Rectangle(14, 10, darkModePanel.Width - 28, 40);
+                Rectangle box = new Rectangle(14, 52, darkModePanel.Width - 28, 40);
                 using (GraphicsPath p = UITheme.CreateRoundedPath(box, 10))
                 using (SolidBrush fill = new SolidBrush(Color.FromArgb(16, 29, 58)))
                 using (Pen border = new Pen(Color.FromArgb(65, 56, 139, 253), 1f))
@@ -324,23 +342,36 @@ namespace InventoryManagementSystem.Forms
                 }
             };
 
+            var btnLogout = new GradientButton
+            {
+                Text = "Logout",
+                Location = new Point(14, 6),
+                Size = new Size(184, 36),
+                CornerRadius = 9,
+                GradientStart = Color.FromArgb(220, 38, 38),
+                GradientEnd = Color.FromArgb(153, 27, 27),
+                Font = UITheme.FontBold
+            };
+            btnLogout.Click += (s, e) => PerformLogout();
+
             var lblDarkMode = new Label
             {
                 Text = "Dark Mode",
                 Font = UITheme.FontBold,
                 ForeColor = Color.FromArgb(219, 234, 254),
                 BackColor = Color.FromArgb(16, 29, 58),
-                Location = new Point(28, 21),
+                Location = new Point(28, 63),
                 AutoSize = true
             };
 
             _tglDarkMode = new ToggleSwitch
             {
                 Checked = true,
-                Location = new Point(140, 19)
+                Location = new Point(140, 61)
             };
             _tglDarkMode.CheckedChanged += (s, e) => ApplyThemeMode(_tglDarkMode.Checked);
 
+            darkModePanel.Controls.Add(btnLogout);
             darkModePanel.Controls.Add(lblDarkMode);
             darkModePanel.Controls.Add(_tglDarkMode);
             _sidebarPanel.Controls.Add(darkModePanel);
@@ -359,25 +390,26 @@ namespace InventoryManagementSystem.Forms
             Controls.Add(_titleBarPanel);
         }
 
-        private GradientButton CreateSidebarNavButton(string text, ref int y)
+        private GradientButton CreateSidebarNavButton(string text, ref int y, bool visible = true)
         {
             var btn = new GradientButton
             {
                 Text = text,
                 Location = new Point(14, y),
-                Size = new Size(184, 36),
+                Size = new Size(184, 32),
                 CornerRadius = 9,
                 TextAlign = ContentAlignment.MiddleLeft,
-                Padding = new Padding(18, 0, 0, 0),
+                Padding = new Padding(16, 0, 0, 0),
                 Font = UITheme.FontNavButton,
                 IsOutline = true,
                 GradientStart = Color.FromArgb(24, 48, 92),
-                GradientEnd = Color.FromArgb(18, 36, 72)
+                GradientEnd = Color.FromArgb(18, 36, 72),
+                Visible = visible
             };
 
             _sidebarPanel.Controls.Add(btn);
             _navButtons.Add(btn);
-            y += 41;
+            if (visible) y += 36;
             return btn;
         }
 
@@ -391,7 +423,9 @@ namespace InventoryManagementSystem.Forms
             _lowStockForm = new LowStockForm();
             _reportsForm = new ReportsForm();
             _activityHistoryForm = new ActivityHistoryForm();
+            _userManagementForm = new UserManagementForm();
             _settingsForm = new SettingsForm();
+            _userProfileForm = new UserProfileForm();
 
             _btnNavDashboard.Click += (s, e) =>
             {
@@ -407,12 +441,14 @@ namespace InventoryManagementSystem.Forms
 
             _btnNavCategories.Click += (s, e) =>
             {
+                if (!EnsureAdminAccess("manage categories")) return;
                 NavigateTo(_btnNavCategories, _categoriesForm);
                 _categoriesForm.RefreshData();
             };
 
             _btnNavSuppliers.Click += (s, e) =>
             {
+                if (!EnsureAdminAccess("manage suppliers")) return;
                 NavigateTo(_btnNavSuppliers, _suppliersForm);
                 _suppliersForm.RefreshData();
             };
@@ -433,13 +469,25 @@ namespace InventoryManagementSystem.Forms
                 _activityHistoryForm.RefreshData();
             };
 
+            _btnNavUsers.Click += (s, e) =>
+            {
+                if (!EnsureAdminAccess("manage user accounts")) return;
+                NavigateTo(_btnNavUsers, _userManagementForm);
+                _userManagementForm.RefreshData();
+            };
+
             _btnNavSettings.Click += (s, e) =>
             {
+                if (!EnsureAdminAccess("access backup and application settings")) return;
                 NavigateTo(_btnNavSettings, _settingsForm);
                 _settingsForm.RefreshData();
             };
 
-            _btnNavAbout.Click += (s, e) => ShowAboutDialog();
+            _btnNavProfile.Click += (s, e) =>
+            {
+                NavigateTo(_btnNavProfile, _userProfileForm);
+                _userProfileForm.RefreshData();
+            };
 
             // Wire Dashboard Quick Actions & Links to actual working features
             _dashboardView.NavigateToProductsRequested += () => _btnNavProducts.PerformClick();
@@ -472,6 +520,8 @@ namespace InventoryManagementSystem.Forms
 
         private void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
         {
+            if (LoggedOut) return;
+
             if (e.CloseReason == CloseReason.UserClosing)
             {
                 DialogResult result = MessageBox.Show(
@@ -485,6 +535,30 @@ namespace InventoryManagementSystem.Forms
                     e.Cancel = true;
                 }
             }
+        }
+
+        private bool EnsureAdminAccess(string action)
+        {
+            if (!SessionManager.IsAdmin)
+            {
+                MessageBox.Show(
+                    $"Access denied: Administrator privileges are required to {action}.",
+                    "Administrator Required",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        public void PerformLogout()
+        {
+            string username = SessionManager.CurrentUser?.Username ?? "Unknown";
+            ActivityLogRepository.LogSafe("User Logout", username, "Signed out of session.");
+            SessionManager.Logout();
+            _contentHostPanel.Controls.Clear();
+            LoggedOut = true;
+            Close();
         }
 
         private void OpenStockView(string mode, int preselectedProductId)
@@ -501,6 +575,20 @@ namespace InventoryManagementSystem.Forms
 
         private void NavigateTo(GradientButton activeBtn, UserControl view)
         {
+            if (!SessionManager.IsAuthenticated)
+            {
+                PerformLogout();
+                return;
+            }
+
+            if ((view == _categoriesForm || view == _suppliersForm || view == _userManagementForm || view == _settingsForm)
+                && !SessionManager.IsAdmin)
+            {
+                MessageBox.Show("Access denied: This section is restricted to the Administrator.",
+                    "Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             _activeNavButton = activeBtn;
             foreach (var btn in _navButtons)
             {
@@ -539,7 +627,9 @@ namespace InventoryManagementSystem.Forms
             _lowStockForm.ApplyTheme();
             _reportsForm.ApplyTheme();
             _activityHistoryForm.ApplyTheme();
+            _userManagementForm.ApplyTheme();
             _settingsForm.ApplyTheme();
+            _userProfileForm.ApplyTheme();
 
             if (_activeNavButton != null)
             {
@@ -560,7 +650,9 @@ namespace InventoryManagementSystem.Forms
             else if (active == _lowStockForm) _lowStockForm.RefreshData();
             else if (active == _reportsForm) _reportsForm.RefreshData();
             else if (active == _activityHistoryForm) _activityHistoryForm.RefreshData();
+            else if (active == _userManagementForm) _userManagementForm.RefreshData();
             else if (active == _settingsForm) _settingsForm.RefreshData();
+            else if (active == _userProfileForm) _userProfileForm.RefreshData();
         }
 
         private void ShowAboutDialog()

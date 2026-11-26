@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.Data.SqlClient;
+using InventoryManagementSystem.Security;
 
 namespace InventoryManagementSystem.Database
 {
@@ -93,6 +94,8 @@ namespace InventoryManagementSystem.Database
 
         public bool CreateBackup(string filePath, out string message)
         {
+            SessionManager.RequireAdmin("create database backups");
+
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 message = "Please specify a valid backup file path.";
@@ -259,6 +262,8 @@ namespace InventoryManagementSystem.Database
 
         public bool RestoreBackup(string filePath, out string message)
         {
+            SessionManager.RequireAdmin("restore database backups");
+
             if (!ValidateBackupFile(filePath, out InventoryBackupData? backup, out string error) || backup == null)
             {
                 message = $"Restore aborted. {error}";

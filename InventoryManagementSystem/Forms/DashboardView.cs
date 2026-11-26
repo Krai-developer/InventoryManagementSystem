@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -420,6 +421,8 @@ namespace InventoryManagementSystem.Forms
             };
 
             var btnDelete = CreateQuickActionTile("Delete Product", Color.FromArgb(239, 68, 68), Color.FromArgb(185, 28, 28));
+            btnDelete.Enabled = SessionManager.CanDeleteProducts;
+            btnDelete.Visible = SessionManager.CanDeleteProducts;
             btnDelete.Click += (s, e) => DeleteSelectedFromDashboard();
 
             qaGrid.Controls.Add(btnAdd, 0, 0);
@@ -792,6 +795,10 @@ namespace InventoryManagementSystem.Forms
             try
             {
                 _lblDateTime.Text = DateTime.Now.ToString("MMM dd, yyyy  •  hh:mm tt");
+                if (SessionManager.CurrentUser != null)
+                {
+                    _lblAdminName.Text = $"{SessionManager.CurrentUser.FullName} ({SessionManager.CurrentUser.Role})";
+                }
 
                 // 1. Load live KPI metrics
                 DashboardSummary summary = _txRepo.GetDashboardSummary();
@@ -918,7 +925,7 @@ namespace InventoryManagementSystem.Forms
                     p.QuantityInStock,
                     p.UnitPrice.ToString("N2"),
                     p.StockStatus,
-                    "Edit  |  Del");
+                    SessionManager.CanDeleteProducts ? "Edit  |  Del" : "Edit");
                 _dgvInventory.Rows[idx].Tag = p;
             }
 
@@ -950,7 +957,7 @@ namespace InventoryManagementSystem.Forms
             Point cursorPos = _dgvInventory.PointToClient(Cursor.Position);
             bool clickedRightHalf = cursorPos.X > cellRect.X + (cellRect.Width / 2);
 
-            if (clickedRightHalf)
+            if (clickedRightHalf && SessionManager.CanDeleteProducts)
             {
                 ConfirmAndDeleteProduct(p);
             }
@@ -962,6 +969,13 @@ namespace InventoryManagementSystem.Forms
 
         private void DeleteSelectedFromDashboard()
         {
+            if (!SessionManager.CanDeleteProducts)
+            {
+                MessageBox.Show("Access denied: Only the Administrator can delete products.",
+                    "Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
             if (_dgvInventory.CurrentRow?.Tag is Product p)
             {
                 ConfirmAndDeleteProduct(p);
@@ -975,6 +989,12 @@ namespace InventoryManagementSystem.Forms
 
         private void ConfirmAndDeleteProduct(Product p)
         {
+            if (!SessionManager.CanDeleteProducts)
+            {
+                MessageBox.Show("Access denied: Only the Administrator can delete products.",
+                    "Permission Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
             DialogResult confirm = MessageBox.Show(
                 $"Delete '{p.ProductName}' ({p.SKU}) from inventory?",
                 "Confirm Delete",
