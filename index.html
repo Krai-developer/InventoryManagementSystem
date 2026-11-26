@@ -460,7 +460,7 @@
               </svg>
             </div>
             <div class="dl-text">
-              <span class="dl-small">Windows 10/11 (64-bit) • Self-Contained • 48.5 MB</span>
+              <span class="dl-small">Windows 10/11 (64-bit) • Self-Contained • <span id="win-size">48.5 MB</span></span>
               <span class="dl-title">Download Windows App (.zip)</span>
             </div>
           </a>
@@ -473,7 +473,7 @@
               </svg>
             </div>
             <div class="dl-text">
-              <span class="dl-small">Visual Studio 2022+ Solution • C# .NET 9 • 100 KB</span>
+              <span class="dl-small">Visual Studio 2022+ Solution • C# .NET 9 • <span id="src-size">110 KB</span></span>
               <span class="dl-title">Download Source Code (.zip)</span>
             </div>
           </a>
@@ -571,5 +571,25 @@
       </div>
     </section>
   </div>
+  <script>
+    (function () {
+      function formatBytes(bytes) {
+        if (!bytes || isNaN(bytes)) return null;
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + " MB";
+        return Math.round(bytes / 1024) + " KB";
+      }
+      function updateSize(url, elId) {
+        fetch(url, { method: "HEAD" })
+          .then(function (r) {
+            var len = parseInt(r.headers.get("content-length"), 10);
+            var text = formatBytes(len);
+            if (text) document.getElementById(elId).textContent = text;
+          })
+          .catch(function () {});
+      }
+      updateSize("InventoryManagementSystem-Windows.zip", "win-size");
+      updateSize("InventoryManagementSystem-Source.zip", "src-size");
+    })();
+  </script>
 </body>
 </html>
