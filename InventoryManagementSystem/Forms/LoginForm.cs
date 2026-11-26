@@ -39,7 +39,11 @@ namespace InventoryManagementSystem.Forms
             Font = UITheme.FontRegular;
             DoubleBuffered = true;
 
-            Paint += (s, e) => UITheme.PaintAmbientBackground(e.Graphics, ClientRectangle);
+            Paint += (s, e) =>
+            {
+                UITheme.PaintAmbientBackground(e.Graphics, ClientRectangle);
+                UITheme.PaintFramelessWindowBorder(e.Graphics, ClientRectangle);
+            };
             MouseDown += DragWindow;
 
             InitializeControls();

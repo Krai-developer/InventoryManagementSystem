@@ -301,9 +301,9 @@ namespace InventoryManagementSystem.Forms
 
             var lblBrandSub = new Label
             {
-                Text = "Stock Management",
-                Font = UITheme.FontBrandSub,
-                ForeColor = UITheme.SidebarTextMuted,
+                Text = SessionManager.IsAdmin ? "ADMINISTRATOR" : "INVENTORY STAFF",
+                Font = new Font("Segoe UI Semibold", 7.75F, FontStyle.Bold),
+                ForeColor = SessionManager.IsAdmin ? Color.FromArgb(56, 189, 248) : Color.FromArgb(52, 211, 153),
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Location = new Point(12, 122),
@@ -313,22 +313,22 @@ namespace InventoryManagementSystem.Forms
             _sidebarPanel.Controls.Add(lblBrandName);
             _sidebarPanel.Controls.Add(lblBrandSub);
 
-            // Navigation Pill Buttons tailored per role
+            // Navigation Pill Buttons tailored per role with crisp vector icons
             bool isAdmin = SessionManager.IsAdmin;
             int navY = 148;
-            _btnNavDashboard  = CreateSidebarNavButton("Dashboard", ref navY, visible: true);
-            _btnNavProducts   = CreateSidebarNavButton("Products", ref navY, visible: true);
-            _btnNavCategories = CreateSidebarNavButton("Categories", ref navY, visible: isAdmin);
-            _btnNavSuppliers  = CreateSidebarNavButton("Suppliers", ref navY, visible: isAdmin);
-            _btnNavStock      = CreateSidebarNavButton("Stock Management", ref navY, visible: isAdmin);
-            _btnNavStockIn    = CreateSidebarNavButton("Stock In", ref navY, visible: !isAdmin);
-            _btnNavStockOut   = CreateSidebarNavButton("Stock Out", ref navY, visible: !isAdmin);
-            _btnNavTxHistory  = CreateSidebarNavButton("Transaction History", ref navY, visible: !isAdmin);
-            _btnNavReports    = CreateSidebarNavButton("Reports", ref navY, visible: true);
-            _btnNavActivity   = CreateSidebarNavButton("Activity History", ref navY, visible: isAdmin);
-            _btnNavUsers      = CreateSidebarNavButton("User Management", ref navY, visible: isAdmin);
-            _btnNavSettings   = CreateSidebarNavButton("Settings", ref navY, visible: isAdmin);
-            _btnNavProfile    = CreateSidebarNavButton("My Account", ref navY, visible: !isAdmin);
+            _btnNavDashboard  = CreateSidebarNavButton("Dashboard", "DASHBOARD", ref navY, visible: true);
+            _btnNavProducts   = CreateSidebarNavButton("Products", "PRODUCTS", ref navY, visible: true);
+            _btnNavCategories = CreateSidebarNavButton("Categories", "CATEGORIES", ref navY, visible: isAdmin);
+            _btnNavSuppliers  = CreateSidebarNavButton("Suppliers", "SUPPLIERS", ref navY, visible: isAdmin);
+            _btnNavStock      = CreateSidebarNavButton("Stock Management", "STOCK", ref navY, visible: isAdmin);
+            _btnNavStockIn    = CreateSidebarNavButton("Stock In", "STOCKIN", ref navY, visible: !isAdmin);
+            _btnNavStockOut   = CreateSidebarNavButton("Stock Out", "STOCKOUT", ref navY, visible: !isAdmin);
+            _btnNavTxHistory  = CreateSidebarNavButton("Transaction History", "HISTORY", ref navY, visible: !isAdmin);
+            _btnNavReports    = CreateSidebarNavButton("Reports", "REPORTS", ref navY, visible: true);
+            _btnNavActivity   = CreateSidebarNavButton("Activity History", "ACTIVITY", ref navY, visible: isAdmin);
+            _btnNavUsers      = CreateSidebarNavButton("User Management", "USERS", ref navY, visible: isAdmin);
+            _btnNavSettings   = CreateSidebarNavButton("Settings", "SETTINGS", ref navY, visible: isAdmin);
+            _btnNavProfile    = CreateSidebarNavButton("My Account", "PROFILE", ref navY, visible: !isAdmin);
 
             // Bottom Logout + Dark Mode Panel inside Sidebar
             var darkModePanel = new Panel
@@ -399,13 +399,14 @@ namespace InventoryManagementSystem.Forms
             Controls.Add(_titleBarPanel);
         }
 
-        private GradientButton CreateSidebarNavButton(string text, ref int y, bool visible = true)
+        private GradientButton CreateSidebarNavButton(string text, string iconKind, ref int y, bool visible = true)
         {
             var btn = new GradientButton
             {
                 Text = text,
+                IconKind = iconKind,
                 Location = new Point(14, y),
-                Size = new Size(184, 32),
+                Size = new Size(184, 33),
                 CornerRadius = 9,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Padding = new Padding(16, 0, 0, 0),
@@ -418,7 +419,7 @@ namespace InventoryManagementSystem.Forms
 
             _sidebarPanel.Controls.Add(btn);
             _navButtons.Add(btn);
-            if (visible) y += 36;
+            if (visible) y += 37;
             return btn;
         }
 
@@ -614,6 +615,7 @@ namespace InventoryManagementSystem.Forms
             foreach (var btn in _navButtons)
             {
                 btn.IsOutline = true;
+                btn.IsActiveNav = false;
                 btn.GradientStart = Color.FromArgb(24, 48, 92);
                 btn.GradientEnd = Color.FromArgb(18, 36, 72);
                 btn.ForeColor = UITheme.SidebarTextMuted;
@@ -621,6 +623,7 @@ namespace InventoryManagementSystem.Forms
             }
 
             activeBtn.IsOutline = false;
+            activeBtn.IsActiveNav = true;
             activeBtn.GradientStart = UITheme.ElectricBlue;
             activeBtn.GradientEnd = UITheme.PrimaryBlue;
             activeBtn.ForeColor = Color.White;

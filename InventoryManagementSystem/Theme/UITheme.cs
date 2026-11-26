@@ -39,33 +39,63 @@ namespace InventoryManagementSystem.Theme
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-            Rectangle rect = new Rectangle(1, 1, Math.Max(2, Width - 3), Math.Max(2, Height - 3));
+            Rectangle shadowRect = new Rectangle(3, 4, Math.Max(2, Width - 5), Math.Max(2, Height - 5));
+            Rectangle rect = new Rectangle(1, 1, Math.Max(2, Width - 4), Math.Max(2, Height - 5));
+
+            if (UITheme.IsDarkMode)
+            {
+                using (GraphicsPath shadowPath = UITheme.CreateRoundedPath(shadowRect, CornerRadius))
+                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(65, 2, 6, 18)))
+                {
+                    g.FillPath(shadowBrush, shadowPath);
+                }
+            }
+            else
+            {
+                using (GraphicsPath shadowPath = UITheme.CreateRoundedPath(shadowRect, CornerRadius))
+                using (SolidBrush shadowBrush = new SolidBrush(Color.FromArgb(20, 15, 23, 42)))
+                {
+                    g.FillPath(shadowBrush, shadowPath);
+                }
+            }
+
             using (GraphicsPath path = UITheme.CreateRoundedPath(rect, CornerRadius))
             {
                 if (UITheme.IsDarkMode)
                 {
                     Color topFill = ShowTopGlowTint
-                        ? UITheme.BlendColor(Color.FromArgb(16, 30, 58), GlowAccent, 0.14f)
-                        : Color.FromArgb(15, 27, 52);
-                    Color bottomFill = Color.FromArgb(10, 19, 39);
+                        ? UITheme.BlendColor(Color.FromArgb(18, 34, 66), GlowAccent, 0.16f)
+                        : Color.FromArgb(16, 29, 56);
+                    Color bottomFill = Color.FromArgb(9, 18, 38);
 
-                    using (LinearGradientBrush fill = new LinearGradientBrush(rect, topFill, bottomFill, 120f))
+                    using (LinearGradientBrush fill = new LinearGradientBrush(rect, topFill, bottomFill, 135f))
                     {
                         g.FillPath(fill, path);
                     }
 
+                    // Soft top glass sheen
+                    Rectangle sheenRect = new Rectangle(rect.X + 1, rect.Y + 1, Math.Max(2, rect.Width - 2), Math.Max(6, rect.Height / 3));
+                    using (GraphicsPath sheenPath = UITheme.CreateRoundedPath(sheenRect, CornerRadius))
+                    using (LinearGradientBrush sheen = new LinearGradientBrush(sheenRect, Color.FromArgb(16, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), 90f))
+                    {
+                        g.FillPath(sheen, sheenPath);
+                    }
+
                     // Outer subtle glow rim
                     Color borderColor = ShowTopGlowTint
-                        ? Color.FromArgb(115, GlowAccent)
-                        : Color.FromArgb(78, 56, 139, 253);
-                    using (Pen borderPen = new Pen(borderColor, 1.2f))
+                        ? Color.FromArgb(135, GlowAccent)
+                        : Color.FromArgb(88, 56, 139, 253);
+                    using (Pen borderPen = new Pen(borderColor, 1.25f))
                     {
                         g.DrawPath(borderPen, path);
                     }
 
                     // Crisp subtle top inner highlight line
                     Rectangle innerTop = new Rectangle(rect.X + CornerRadius, rect.Y + 1, Math.Max(1, rect.Width - CornerRadius * 2), 1);
-                    using (Pen highlightPen = new Pen(Color.FromArgb(45, 147, 197, 253), 1f))
+                    Color highlightCol = ShowTopGlowTint
+                        ? Color.FromArgb(130, GlowAccent)
+                        : Color.FromArgb(65, 147, 197, 253);
+                    using (Pen highlightPen = new Pen(highlightCol, 1.2f))
                     {
                         g.DrawLine(highlightPen, innerTop.Left, innerTop.Top, innerTop.Right, innerTop.Top);
                     }
@@ -102,6 +132,12 @@ namespace InventoryManagementSystem.Theme
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsOutline { get; set; } = false;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public string IconKind { get; set; } = string.Empty;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsActiveNav { get; set; } = false;
 
         public GradientButton()
         {
@@ -168,7 +204,7 @@ namespace InventoryManagementSystem.Theme
             {
                 if (!Enabled)
                 {
-                    using (SolidBrush dis = new SolidBrush(Color.FromArgb(45, 58, 82)))
+                    using (SolidBrush dis = new SolidBrush(Color.FromArgb(35, 48, 72)))
                     {
                         g.FillPath(dis, path);
                     }
@@ -176,10 +212,13 @@ namespace InventoryManagementSystem.Theme
                 else if (IsOutline)
                 {
                     Color fillC = _isHovered
-                        ? Color.FromArgb(40, GradientStart)
-                        : (UITheme.IsDarkMode ? Color.FromArgb(18, 32, 60) : Color.FromArgb(245, 248, 252));
+                        ? (UITheme.IsDarkMode ? Color.FromArgb(24, 46, 86) : Color.FromArgb(236, 243, 255))
+                        : (UITheme.IsDarkMode ? Color.FromArgb(14, 26, 52) : Color.FromArgb(245, 248, 252));
+                    Color penC = _isHovered
+                        ? Color.FromArgb(140, 56, 189, 248)
+                        : (UITheme.IsDarkMode ? Color.FromArgb(52, 56, 139, 253) : Color.FromArgb(203, 213, 225));
                     using (SolidBrush fill = new SolidBrush(fillC))
-                    using (Pen pen = new Pen(UITheme.IsDarkMode ? Color.FromArgb(90, 96, 165, 250) : Color.FromArgb(203, 213, 225), 1.2f))
+                    using (Pen pen = new Pen(penC, 1.1f))
                     {
                         g.FillPath(fill, path);
                         g.DrawPath(pen, path);
@@ -194,14 +233,22 @@ namespace InventoryManagementSystem.Theme
                              : _isHovered ? ControlPaint.Light(GradientEnd, 0.12f)
                              : GradientEnd;
 
-                    using (LinearGradientBrush grad = new LinearGradientBrush(rect, c1, c2, 90f))
+                    using (LinearGradientBrush grad = new LinearGradientBrush(rect, c1, c2, 115f))
                     {
                         g.FillPath(grad, path);
                     }
 
-                    using (Pen rim = new Pen(Color.FromArgb(_isHovered ? 170 : 95, Color.White), 1f))
+                    using (Pen rim = new Pen(Color.FromArgb(_isHovered ? 190 : 110, Color.White), 1f))
                     {
                         g.DrawPath(rim, path);
+                    }
+
+                    if (IsActiveNav)
+                    {
+                        using (SolidBrush bar = new SolidBrush(Color.FromArgb(224, 242, 254)))
+                        {
+                            g.FillRectangle(bar, rect.X + 3, rect.Y + 6, 3, Math.Max(8, rect.Height - 12));
+                        }
                     }
                 }
             }
@@ -210,11 +257,21 @@ namespace InventoryManagementSystem.Theme
                 ? Color.FromArgb(130, 148, 175)
                 : (IsOutline ? (UITheme.IsDarkMode ? Color.FromArgb(219, 234, 254) : UITheme.TextPrimary) : ForeColor);
 
+            bool hasIcon = !string.IsNullOrWhiteSpace(IconKind);
+            if (hasIcon && TextAlign == ContentAlignment.MiddleLeft)
+            {
+                Color iconCol = IsOutline
+                    ? (_isHovered ? Color.FromArgb(56, 189, 248) : Color.FromArgb(147, 197, 253))
+                    : Color.White;
+                UITheme.DrawNavIcon(g, IconKind, new RectangleF(14, (Height - 16) / 2f, 16, 16), iconCol);
+            }
+
             TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
             if (TextAlign == ContentAlignment.MiddleLeft)
             {
                 flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
-                Rectangle textRect = new Rectangle(Padding.Left, 0, Width - Padding.Left - 8, Height);
+                int leftPad = hasIcon ? 38 : Padding.Left;
+                Rectangle textRect = new Rectangle(leftPad, 0, Width - leftPad - 8, Height);
                 TextRenderer.DrawText(g, Text, Font, textRect, textCol, flags);
             }
             else
@@ -619,10 +676,18 @@ namespace InventoryManagementSystem.Theme
 
         public static void StyleDataGridView(DataGridView dgv)
         {
-            dgv.BackgroundColor = IsDarkMode ? Color.FromArgb(12, 22, 44) : Color.White;
+            // Enable double-buffering on DataGridView for smooth, flicker-free scrolling
+            typeof(DataGridView).InvokeMember(
+                "DoubleBuffered",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.SetProperty,
+                null,
+                dgv,
+                new object[] { true });
+
+            dgv.BackgroundColor = IsDarkMode ? Color.FromArgb(11, 20, 40) : Color.White;
             dgv.BorderStyle = BorderStyle.None;
             dgv.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-            dgv.GridColor = IsDarkMode ? Color.FromArgb(26, 44, 78) : Color.FromArgb(234, 238, 245);
+            dgv.GridColor = IsDarkMode ? Color.FromArgb(24, 42, 76) : Color.FromArgb(234, 238, 245);
             dgv.EnableHeadersVisualStyles = false;
             dgv.RowHeadersVisible = false;
             dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
@@ -635,23 +700,23 @@ namespace InventoryManagementSystem.Theme
 
             dgv.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            dgv.ColumnHeadersHeight = 38;
-            dgv.ColumnHeadersDefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(19, 34, 64) : Color.FromArgb(241, 245, 249);
-            dgv.ColumnHeadersDefaultCellStyle.ForeColor = IsDarkMode ? Color.FromArgb(191, 219, 254) : Color.FromArgb(51, 65, 85);
+            dgv.ColumnHeadersHeight = 40;
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(17, 32, 62) : Color.FromArgb(241, 245, 249);
+            dgv.ColumnHeadersDefaultCellStyle.ForeColor = IsDarkMode ? Color.FromArgb(147, 197, 253) : Color.FromArgb(51, 65, 85);
             dgv.ColumnHeadersDefaultCellStyle.Font = FontBold;
             dgv.ColumnHeadersDefaultCellStyle.SelectionBackColor = dgv.ColumnHeadersDefaultCellStyle.BackColor;
             dgv.ColumnHeadersDefaultCellStyle.SelectionForeColor = dgv.ColumnHeadersDefaultCellStyle.ForeColor;
-            dgv.ColumnHeadersDefaultCellStyle.Padding = new Padding(8, 0, 8, 0);
+            dgv.ColumnHeadersDefaultCellStyle.Padding = new Padding(10, 0, 10, 0);
 
-            dgv.RowTemplate.Height = 40;
-            dgv.DefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(12, 22, 44) : Color.White;
+            dgv.RowTemplate.Height = 42;
+            dgv.DefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(11, 20, 40) : Color.White;
             dgv.DefaultCellStyle.ForeColor = IsDarkMode ? Color.FromArgb(241, 245, 249) : Color.FromArgb(15, 23, 42);
             dgv.DefaultCellStyle.Font = FontRegular;
-            dgv.DefaultCellStyle.SelectionBackColor = IsDarkMode ? Color.FromArgb(26, 54, 102) : Color.FromArgb(219, 234, 254);
+            dgv.DefaultCellStyle.SelectionBackColor = IsDarkMode ? Color.FromArgb(24, 54, 108) : Color.FromArgb(219, 234, 254);
             dgv.DefaultCellStyle.SelectionForeColor = IsDarkMode ? Color.White : Color.FromArgb(23, 37, 84);
-            dgv.DefaultCellStyle.Padding = new Padding(8, 0, 8, 0);
+            dgv.DefaultCellStyle.Padding = new Padding(10, 0, 10, 0);
 
-            dgv.AlternatingRowsDefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(14, 26, 50) : Color.FromArgb(248, 250, 253);
+            dgv.AlternatingRowsDefaultCellStyle.BackColor = IsDarkMode ? Color.FromArgb(14, 25, 48) : Color.FromArgb(248, 250, 253);
         }
 
         public static void StyleButton(Button btn, Color bgColor, Color? fgColor = null)
@@ -716,8 +781,95 @@ namespace InventoryManagementSystem.Theme
         }
 
         /// <summary>
-        /// Custom-paints a sleek rounded colored status pill ("In Stock", "Low Stock", "Out of Stock")
-        /// inside a DataGridView cell, matching the reference screenshot.
+        /// Draws crisp 16x16 GDI+ vector navigation icons for sidebar buttons.
+        /// </summary>
+        public static void DrawNavIcon(Graphics g, string kind, RectangleF r, Color color)
+        {
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            using Pen pen = new Pen(color, 1.6f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round };
+            using SolidBrush brush = new SolidBrush(color);
+
+            float x = r.X, y = r.Y, w = r.Width, h = r.Height;
+
+            switch (kind.ToUpperInvariant())
+            {
+                case "DASHBOARD":
+                    g.DrawRectangle(pen, x + 1, y + 1, 5.5f, 5.5f);
+                    g.DrawRectangle(pen, x + 9, y + 1, 5.5f, 5.5f);
+                    g.DrawRectangle(pen, x + 1, y + 9, 5.5f, 5.5f);
+                    g.DrawRectangle(pen, x + 9, y + 9, 5.5f, 5.5f);
+                    break;
+                case "PRODUCTS":
+                    g.DrawPolygon(pen, new[] { new PointF(x + w / 2, y + 1), new PointF(x + w - 1, y + 4.5f), new PointF(x + w / 2, y + 8), new PointF(x + 1, y + 4.5f) });
+                    g.DrawLine(pen, x + 1, y + 4.5f, x + 1, y + h - 4);
+                    g.DrawLine(pen, x + w - 1, y + 4.5f, x + w - 1, y + h - 4);
+                    g.DrawLine(pen, x + w / 2, y + 8, x + w / 2, y + h - 1);
+                    g.DrawLine(pen, x + 1, y + h - 4, x + w / 2, y + h - 1);
+                    g.DrawLine(pen, x + w - 1, y + h - 4, x + w / 2, y + h - 1);
+                    break;
+                case "CATEGORIES":
+                    g.DrawPolygon(pen, new[] { new PointF(x + 2, y + 2), new PointF(x + 8.5f, y + 2), new PointF(x + w - 1, y + 9), new PointF(x + 9, y + h - 1), new PointF(x + 2, y + 8.5f) });
+                    g.FillEllipse(brush, x + 4.5f, y + 4.5f, 2.5f, 2.5f);
+                    break;
+                case "SUPPLIERS":
+                    g.DrawRectangle(pen, x + 1, y + 3, 9, 8);
+                    g.DrawPolygon(pen, new[] { new PointF(x + 10, y + 5), new PointF(x + 13.5f, y + 5), new PointF(x + w - 1, y + 8), new PointF(x + w - 1, y + 11), new PointF(x + 10, y + 11) });
+                    g.DrawEllipse(pen, x + 2.5f, y + 11, 3, 3);
+                    g.DrawEllipse(pen, x + 10.5f, y + 11, 3, 3);
+                    break;
+                case "STOCK":
+                case "STOCKIN":
+                    g.DrawLine(pen, x + 3, y + 5, x + w - 3, y + 5);
+                    g.DrawLine(pen, x + w - 6, y + 2, x + w - 3, y + 5);
+                    g.DrawLine(pen, x + w - 6, y + 8, x + w - 3, y + 5);
+                    g.DrawLine(pen, x + w - 3, y + 11, x + 3, y + 11);
+                    g.DrawLine(pen, x + 6, y + 8, x + 3, y + 11);
+                    g.DrawLine(pen, x + 6, y + 14, x + 3, y + 11);
+                    break;
+                case "STOCKOUT":
+                    g.DrawLine(pen, x + 2, y + h / 2, x + w - 2, y + h / 2);
+                    g.DrawLine(pen, x + w - 6, y + 4, x + w - 2, y + h / 2);
+                    g.DrawLine(pen, x + w - 6, y + h - 4, x + w - 2, y + h / 2);
+                    break;
+                case "HISTORY":
+                case "ACTIVITY":
+                    g.DrawEllipse(pen, x + 1.5f, y + 1.5f, w - 3, h - 3);
+                    g.DrawLine(pen, x + w / 2, y + 4.5f, x + w / 2, y + h / 2);
+                    g.DrawLine(pen, x + w / 2, y + h / 2, x + w - 4.5f, y + h / 2 + 2);
+                    break;
+                case "REPORTS":
+                    g.DrawLine(pen, x + 2, y + h - 2, x + w - 2, y + h - 2);
+                    g.DrawLine(pen, x + 4, y + h - 2, x + 4, y + 9);
+                    g.DrawLine(pen, x + 8, y + h - 2, x + 8, y + 4);
+                    g.DrawLine(pen, x + 12, y + h - 2, x + 12, y + 6.5f);
+                    break;
+                case "USERS":
+                case "PROFILE":
+                    g.DrawEllipse(pen, x + 5, y + 1.5f, 6, 6);
+                    g.DrawArc(pen, x + 2, y + 9, 12, 9, 180, 180);
+                    break;
+                case "SETTINGS":
+                    g.DrawEllipse(pen, x + 5.5f, y + 5.5f, 5, 5);
+                    g.DrawEllipse(pen, x + 2, y + 2, 12, 12);
+                    break;
+                default:
+                    g.FillEllipse(brush, x + 5, y + 5, 6, 6);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Paints a crisp 1px glowing border around frameless application windows.
+        /// </summary>
+        public static void PaintFramelessWindowBorder(Graphics g, Rectangle clientRect)
+        {
+            using Pen border = new Pen(IsDarkMode ? Color.FromArgb(95, 56, 139, 253) : Color.FromArgb(180, 203, 213, 225), 1.5f);
+            g.DrawRectangle(border, 0, 0, Math.Max(1, clientRect.Width - 1), Math.Max(1, clientRect.Height - 1));
+        }
+
+        /// <summary>
+        /// Custom-paints a modern dark-glass rounded status pill with a glowing status dot
+        /// ("In Stock", "Low Stock", "Out of Stock") inside a DataGridView cell.
         /// </summary>
         public static void PaintStatusPillCell(DataGridViewCellPaintingEventArgs e, string? status)
         {
@@ -725,13 +877,24 @@ namespace InventoryManagementSystem.Theme
 
             e.PaintBackground(e.ClipBounds, true);
 
-            Color pillBg = SuccessGreen;
-            if (status.Contains("Out", StringComparison.OrdinalIgnoreCase))
-                pillBg = DangerRed;
-            else if (status.Contains("Low", StringComparison.OrdinalIgnoreCase))
-                pillBg = WarningAmber;
+            Color accent = SuccessGreen;
+            Color pillFill = IsDarkMode ? Color.FromArgb(16, 64, 48) : Color.FromArgb(220, 252, 231);
+            Color textCol = IsDarkMode ? Color.FromArgb(134, 239, 172) : Color.FromArgb(22, 101, 52);
 
-            int pillW = Math.Min(e.CellBounds.Width - 14, 96);
+            if (status.Contains("Out", StringComparison.OrdinalIgnoreCase))
+            {
+                accent = DangerRed;
+                pillFill = IsDarkMode ? Color.FromArgb(78, 22, 32) : Color.FromArgb(254, 226, 226);
+                textCol = IsDarkMode ? Color.FromArgb(252, 165, 165) : Color.FromArgb(153, 27, 27);
+            }
+            else if (status.Contains("Low", StringComparison.OrdinalIgnoreCase))
+            {
+                accent = WarningAmber;
+                pillFill = IsDarkMode ? Color.FromArgb(78, 48, 16) : Color.FromArgb(254, 243, 199);
+                textCol = IsDarkMode ? Color.FromArgb(253, 224, 71) : Color.FromArgb(146, 64, 14);
+            }
+
+            int pillW = Math.Min(e.CellBounds.Width - 12, 102);
             int pillH = 24;
             Rectangle pillRect = new Rectangle(
                 e.CellBounds.X + (e.CellBounds.Width - pillW) / 2,
@@ -740,22 +903,30 @@ namespace InventoryManagementSystem.Theme
                 pillH);
 
             e.Graphics!.SmoothingMode = SmoothingMode.AntiAlias;
-            using (GraphicsPath path = CreateRoundedPath(pillRect, 6))
-            using (SolidBrush fill = new SolidBrush(pillBg))
+            using (GraphicsPath path = CreateRoundedPath(pillRect, 12))
+            using (SolidBrush fill = new SolidBrush(pillFill))
+            using (Pen border = new Pen(Color.FromArgb(140, accent), 1f))
             {
                 e.Graphics.FillPath(fill, path);
+                e.Graphics.DrawPath(border, path);
             }
 
+            using (SolidBrush dot = new SolidBrush(accent))
+            {
+                e.Graphics.FillEllipse(dot, pillRect.X + 9, pillRect.Y + 9, 6, 6);
+            }
+
+            Rectangle textRect = new Rectangle(pillRect.X + 16, pillRect.Y, pillRect.Width - 18, pillRect.Height);
             TextRenderer.DrawText(
                 e.Graphics,
                 status,
                 FontSmall,
-                pillRect,
-                Color.White,
+                textRect,
+                textCol,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
             // Preserve bottom gridline
-            using (Pen gridPen = new Pen(IsDarkMode ? Color.FromArgb(26, 44, 78) : Color.FromArgb(234, 238, 245)))
+            using (Pen gridPen = new Pen(IsDarkMode ? Color.FromArgb(24, 42, 76) : Color.FromArgb(234, 238, 245)))
             {
                 e.Graphics.DrawLine(gridPen, e.CellBounds.Left, e.CellBounds.Bottom - 1, e.CellBounds.Right, e.CellBounds.Bottom - 1);
             }
