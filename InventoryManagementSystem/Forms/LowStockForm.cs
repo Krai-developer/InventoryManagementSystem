@@ -71,23 +71,27 @@ namespace InventoryManagementSystem.Forms
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
                 Location = new Point(16, 32),
-                AutoSize = true
+                Size = new Size(420, 26),
+                AutoEllipsis = true
             };
 
-            topCard.Controls.Add(new Label
+            var lblCatCaption = new Label
             {
                 Text = "Category:",
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(450, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(topCard.Width - 436, 35),
                 AutoSize = true
-            });
+            };
+            topCard.Controls.Add(lblCatCaption);
 
             _cboCategory = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Location = new Point(522, 31),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(topCard.Width - 362, 31),
                 Size = new Size(195, 27)
             };
             UITheme.StyleComboBox(_cboCategory);
@@ -99,7 +103,8 @@ namespace InventoryManagementSystem.Forms
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(734, 33),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(topCard.Width - 154, 33),
                 AutoSize = true
             };
             _chkOnlyOutOfStock.CheckedChanged += (s, e) => LoadAlerts();
@@ -201,12 +206,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblAlertSummary.ForeColor = UITheme.TextPrimary;
-            _chkOnlyOutOfStock.ForeColor = UITheme.TextSecondary;
-            UITheme.StyleComboBox(_cboCategory);
-            UITheme.StyleNumericUpDown(_numQuickRestockQty);
-            UITheme.StyleSecondaryButton(_btnOpenStockIn);
-            UITheme.StyleDataGridView(_dgvAlerts);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
 

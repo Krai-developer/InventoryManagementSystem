@@ -154,20 +154,20 @@ namespace InventoryManagementSystem.Forms
                 Size = new Size(348, 86)
             };
 
-            _previewBox.Controls.Add(new Label { Text = "SKU:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, Location = new Point(12, 8), AutoSize = true });
-            _lblSkuValue = new Label { Text = "-", Font = UITheme.FontBold, ForeColor = UITheme.ElectricBlue, Location = new Point(84, 8), AutoSize = true };
+            _previewBox.Controls.Add(new Label { Text = "SKU:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, BackColor = Color.Transparent, Location = new Point(12, 8), AutoSize = true });
+            _lblSkuValue = new Label { Text = "-", Font = UITheme.FontBold, ForeColor = UITheme.ElectricBlue, BackColor = Color.Transparent, Location = new Point(84, 8), AutoSize = true };
             _previewBox.Controls.Add(_lblSkuValue);
 
-            _previewBox.Controls.Add(new Label { Text = "Category:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, Location = new Point(12, 31), AutoSize = true });
-            _lblCategoryValue = new Label { Text = "-", Font = UITheme.FontRegular, ForeColor = UITheme.TextSecondary, Location = new Point(84, 31), AutoSize = true };
+            _previewBox.Controls.Add(new Label { Text = "Category:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, BackColor = Color.Transparent, Location = new Point(12, 31), AutoSize = true });
+            _lblCategoryValue = new Label { Text = "-", Font = UITheme.FontRegular, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(84, 31), AutoSize = true };
             _previewBox.Controls.Add(_lblCategoryValue);
 
-            _previewBox.Controls.Add(new Label { Text = "Current:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, Location = new Point(12, 56), AutoSize = true });
-            _lblCurrentStockValue = new Label { Text = "0", Font = UITheme.FontBold, ForeColor = UITheme.TextPrimary, Location = new Point(84, 55), AutoSize = true };
+            _previewBox.Controls.Add(new Label { Text = "Current:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, BackColor = Color.Transparent, Location = new Point(12, 56), AutoSize = true });
+            _lblCurrentStockValue = new Label { Text = "0", Font = UITheme.FontBold, ForeColor = UITheme.TextPrimary, BackColor = Color.Transparent, Location = new Point(84, 55), AutoSize = true };
             _previewBox.Controls.Add(_lblCurrentStockValue);
 
-            _previewBox.Controls.Add(new Label { Text = "After:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, Location = new Point(188, 56), AutoSize = true });
-            _lblProjectedStockValue = new Label { Text = "0", Font = UITheme.FontBold, ForeColor = UITheme.TealGlow, Location = new Point(236, 55), AutoSize = true };
+            _previewBox.Controls.Add(new Label { Text = "After:", Font = UITheme.FontSmall, ForeColor = UITheme.TextMuted, BackColor = Color.Transparent, Location = new Point(188, 56), AutoSize = true });
+            _lblProjectedStockValue = new Label { Text = "0", Font = UITheme.FontBold, ForeColor = UITheme.TealGlow, BackColor = Color.Transparent, Location = new Point(236, 55), AutoSize = true };
             _previewBox.Controls.Add(_lblProjectedStockValue);
 
             _entryCard.Controls.Add(_previewBox);
@@ -277,15 +277,9 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblFormBanner.ForeColor = UITheme.TextPrimary;
+            UITheme.ApplyThemeRecursive(this);
             _previewBox.BackColor = UITheme.InputSurface;
-            _lblCurrentStockValue.ForeColor = UITheme.TextPrimary;
-            UITheme.StyleComboBox(_cboProduct);
-            UITheme.StyleComboBox(_cboSupplier);
-            UITheme.StyleNumericUpDown(_numQuantity);
-            UITheme.StyleTextBox(_txtReferenceNo);
-            UITheme.StyleTextBox(_txtRemarks);
-            UITheme.StyleDataGridView(_dgvHistory);
+            UpdateProductPreview();
             Invalidate(true);
         }
 
@@ -429,7 +423,7 @@ namespace InventoryManagementSystem.Forms
                 int qty = (int)_numQuantity.Value;
                 int projected = _transactionType == "IN"
                     ? p.QuantityInStock + qty
-                    : p.QuantityInStock - qty;
+                    : (_transactionType == "ADJUST" ? qty : p.QuantityInStock - qty);
 
                 _lblProjectedStockValue.Text = projected.ToString();
                 if (projected < 0)
@@ -441,7 +435,7 @@ namespace InventoryManagementSystem.Forms
                 {
                     _lblProjectedStockValue.ForeColor = _transactionType == "IN"
                         ? UITheme.TealGlow
-                        : Color.FromArgb(251, 191, 36);
+                        : (_transactionType == "ADJUST" ? UITheme.ElectricBlue : Color.FromArgb(251, 191, 36));
                 }
             }
             else

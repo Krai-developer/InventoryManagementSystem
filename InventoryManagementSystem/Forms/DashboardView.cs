@@ -111,8 +111,8 @@ namespace InventoryManagementSystem.Forms
                     e.Graphics.FillRectangle(bar, 2, 6, 4, 42);
                 }
 
-                // Right circular User Avatar + online dot
-                int avX = headerPanel.Width - 206;
+                // Right circular User Avatar + online dot (placed cleanly on the far right so text never clips)
+                int avX = headerPanel.Width - 46;
                 int avY = 8;
                 Rectangle avRect = new Rectangle(avX, avY, 38, 38);
                 using (Pen ring = new Pen(UITheme.ElectricBlue, 2f))
@@ -159,9 +159,11 @@ namespace InventoryManagementSystem.Forms
                 Font = UITheme.FontBold,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleRight,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(headerPanel.Width - 158, 9),
-                AutoSize = true
+                Location = new Point(headerPanel.Width - 318, 8),
+                Size = new Size(262, 20),
+                AutoEllipsis = true
             };
 
             _lblDateTime = new Label
@@ -170,9 +172,10 @@ namespace InventoryManagementSystem.Forms
                 Font = new Font("Segoe UI", 8F, FontStyle.Regular),
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleRight,
                 Anchor = AnchorStyles.Top | AnchorStyles.Right,
-                Location = new Point(headerPanel.Width - 158, 28),
-                AutoSize = true
+                Location = new Point(headerPanel.Width - 318, 28),
+                Size = new Size(262, 18)
             };
 
             headerPanel.Controls.Add(_lblWelcome);
@@ -789,6 +792,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
+            UITheme.ApplyThemeRecursive(this);
             _lblWelcome.ForeColor = UITheme.TextPrimary;
             _lblWelcomeSub.ForeColor = UITheme.TextMuted;
             _lblAdminName.ForeColor = UITheme.TextPrimary;
@@ -798,12 +802,6 @@ namespace InventoryManagementSystem.Forms
             _lblTotalStockValue.ForeColor = UITheme.TextPrimary;
             _lblLowStockValue.ForeColor = UITheme.TextPrimary;
             _lblTotalValueAmount.ForeColor = UITheme.TextPrimary;
-
-            UITheme.StyleTextBox(_txtSearch);
-            UITheme.StyleComboBox(_cboCategory);
-            UITheme.StyleDataGridView(_dgvInventory);
-            UITheme.StyleSecondaryButton(_btnPrevPage);
-            UITheme.StyleSecondaryButton(_btnNextPage);
 
             _donutChart.Invalidate();
             Invalidate(true);

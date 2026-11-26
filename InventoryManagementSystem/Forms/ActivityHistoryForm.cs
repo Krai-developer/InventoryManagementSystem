@@ -147,10 +147,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            UITheme.StyleTextBox(_txtSearch);
-            UITheme.StyleComboBox(_cboAction);
-            UITheme.StyleSecondaryButton(_btnReset);
-            UITheme.StyleDataGridView(_dgvLogs);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
 

@@ -186,18 +186,10 @@ namespace InventoryManagementSystem.Theme
 
         protected override void OnPaint(PaintEventArgs pevent)
         {
+            base.OnPaintBackground(pevent);
             Graphics g = pevent.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-
-            // Paint parent background so corners are clean
-            if (Parent != null)
-            {
-                using (SolidBrush bg = new SolidBrush(Parent.BackColor == Color.Transparent ? UITheme.CardSurface : Parent.BackColor))
-                {
-                    g.FillRectangle(bg, ClientRectangle);
-                }
-            }
 
             Rectangle rect = new Rectangle(1, 1, Math.Max(2, Width - 3), Math.Max(2, Height - 3));
             using (GraphicsPath path = UITheme.CreateRoundedPath(rect, CornerRadius))
@@ -767,6 +759,86 @@ namespace InventoryManagementSystem.Theme
                 using (GraphicsPath path = CreateRoundedPath(new Rectangle(0, 0, b.Width, b.Height), 8))
                 {
                     b.Region = new Region(path);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Recursively updates colors and styles of all child controls inside a UserControl/Form
+        /// when switching between Dark Mode and Light Mode so no text becomes invisible.
+        /// </summary>
+        public static void ApplyThemeRecursive(Control parent)
+        {
+            foreach (Control c in parent.Controls)
+            {
+                if (c is GlassCardPanel || c is GradientButton || c is DonutChartControl || c is ToggleSwitch)
+                {
+                    c.Invalidate();
+                }
+                else if (c is DataGridView dgv)
+                {
+                    StyleDataGridView(dgv);
+                }
+                else if (c is TextBox txt)
+                {
+                    StyleTextBox(txt);
+                }
+                else if (c is ComboBox cbo)
+                {
+                    StyleComboBox(cbo);
+                }
+                else if (c is NumericUpDown num)
+                {
+                    StyleNumericUpDown(num);
+                }
+                else if (c is Button btn)
+                {
+                    // Restyle standard flat secondary buttons
+                    if (btn.FlatStyle == FlatStyle.Flat && btn.FlatAppearance.BorderSize > 0)
+                    {
+                        StyleSecondaryButton(btn);
+                    }
+                }
+                else if (c is CheckBox chk)
+                {
+                    chk.ForeColor = TextSecondary;
+                }
+                else if (c is GroupBox grp)
+                {
+                    grp.ForeColor = TextSecondary;
+                }
+                else if (c is LinkLabel lnk)
+                {
+                    lnk.LinkColor = ElectricBlue;
+                    lnk.ActiveLinkColor = IsDarkMode ? Color.White : PrimaryBlue;
+                }
+                else if (c is Label lbl)
+                {
+                    // Preserve intentional semantic accent colors (blue, green, amber, red, purple)
+                    Color fc = lbl.ForeColor;
+                    bool isAccent =
+                        fc == ElectricBlue || fc == PrimaryBlue || fc == TealGlow ||
+                        fc == SuccessGreen || fc == WarningAmber || fc == DangerRed ||
+                        fc == PurpleAccent ||
+                        (fc.R > 200 && fc.G < 130 && fc.B < 130) ||   // soft red error/alert
+                        (fc.R > 220 && fc.G > 150 && fc.B < 80);      // amber highlight
+
+                    if (!isAccent)
+                    {
+                        if (lbl.Font.Size >= 10.5f || lbl == parent)
+                            lbl.ForeColor = TextPrimary;
+                        else if (lbl.Font.Bold)
+                            lbl.ForeColor = TextPrimary;
+                        else if (lbl.Font.Size <= 8.6f)
+                            lbl.ForeColor = TextMuted;
+                        else
+                            lbl.ForeColor = TextSecondary;
+                    }
+                }
+
+                if (c.HasChildren)
+                {
+                    ApplyThemeRecursive(c);
                 }
             }
         }

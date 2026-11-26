@@ -299,10 +299,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblTitle.ForeColor = UITheme.TextPrimary;
-            UITheme.StyleTextBox(_txtSearch);
-            UITheme.StyleComboBox(_cboType);
-            UITheme.StyleDataGridView(_dgvHistory);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
     }

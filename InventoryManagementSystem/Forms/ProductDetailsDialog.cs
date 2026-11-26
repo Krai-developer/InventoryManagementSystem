@@ -6,6 +6,7 @@ using System.IO;
 using System.Windows.Forms;
 using InventoryManagementSystem.Database;
 using InventoryManagementSystem.Models;
+using InventoryManagementSystem.Security;
 using InventoryManagementSystem.Theme;
 
 namespace InventoryManagementSystem.Forms
@@ -59,7 +60,8 @@ namespace InventoryManagementSystem.Forms
                 Font = new Font("Segoe UI Semibold", 13.5F, FontStyle.Bold),
                 ForeColor = Color.White,
                 Location = new Point(18, 10),
-                AutoSize = true
+                Size = new Size(460, 26),
+                AutoEllipsis = true
             };
 
             var lblBannerSub = new Label
@@ -68,7 +70,8 @@ namespace InventoryManagementSystem.Forms
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.SidebarTextMuted,
                 Location = new Point(20, 38),
-                AutoSize = true
+                Size = new Size(460, 20),
+                AutoEllipsis = true
             };
 
             _lblStatusBadge = new Label
@@ -76,7 +79,8 @@ namespace InventoryManagementSystem.Forms
                 Text = _product.StockStatus,
                 Font = UITheme.FontBold,
                 ForeColor = Color.White,
-                Location = new Point(500, 19),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                Location = new Point(banner.Width - 130, 19),
                 AutoSize = true,
                 Padding = new Padding(10, 4, 10, 4)
             };
@@ -110,7 +114,8 @@ namespace InventoryManagementSystem.Forms
             {
                 Text = "Choose Image...",
                 Location = new Point(18, 162),
-                Size = new Size(128, 30)
+                Size = new Size(128, 30),
+                Visible = SessionManager.CanManageProducts
             };
             UITheme.StyleSecondaryButton(btnLoadPhoto);
             btnLoadPhoto.Click += BtnLoadPhoto_Click;

@@ -188,7 +188,8 @@ namespace InventoryManagementSystem.Forms
                 Size = new Size(80, 29),
                 CornerRadius = 8,
                 GradientStart = Color.FromArgb(239, 68, 68),
-                GradientEnd = UITheme.DangerRed
+                GradientEnd = UITheme.DangerRed,
+                Visible = SessionManager.CanManageProducts
             };
             btnClearAll.Click += (s, e) =>
             {
@@ -228,7 +229,9 @@ namespace InventoryManagementSystem.Forms
             var gridFooter = new Panel { Dock = DockStyle.Bottom, Height = 42, Padding = new Padding(0, 6, 0, 0), BackColor = Color.Transparent };
             gridFooter.Controls.Add(new Label
             {
-                Text = "Select a row to edit, or double-click to inspect details.",
+                Text = SessionManager.CanManageProducts
+                    ? "Select a row to edit, or double-click to inspect details."
+                    : "Double-click any row (or click View Details) to inspect product information.",
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 BackColor = Color.Transparent,
@@ -366,7 +369,8 @@ namespace InventoryManagementSystem.Forms
                 ActiveLinkColor = Color.White,
                 BackColor = Color.Transparent,
                 Location = new Point(272, y),
-                AutoSize = true
+                AutoSize = true,
+                Visible = SessionManager.CanManageProducts
             };
             lnkGenSku.LinkClicked += (s, e) => _txtSku.Text = $"P{Random.Shared.Next(100, 999)}";
             _grpEditor.Controls.Add(lnkGenSku);
@@ -461,7 +465,13 @@ namespace InventoryManagementSystem.Forms
             _grpEditor.Controls.Add(_btnSave);
             y += 42;
 
-            _btnClear = new Button { Text = "Clear", Location = new Point(14, y), Size = new Size(152, 32) };
+            _btnClear = new Button
+            {
+                Text = "Clear",
+                Location = new Point(14, y),
+                Size = new Size(152, 32),
+                Visible = SessionManager.CanManageProducts
+            };
             UITheme.StyleSecondaryButton(_btnClear);
             _btnClear.Click += (s, e) => ResetEditorForm();
             _grpEditor.Controls.Add(_btnClear);
@@ -474,7 +484,8 @@ namespace InventoryManagementSystem.Forms
                 CornerRadius = 8,
                 GradientStart = Color.FromArgb(239, 68, 68),
                 GradientEnd = UITheme.DangerRed,
-                Enabled = false
+                Enabled = false,
+                Visible = SessionManager.CanDeleteProducts
             };
             _btnDelete.Click += BtnDelete_Click;
             _grpEditor.Controls.Add(_btnDelete);
@@ -488,25 +499,8 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblFormMode.ForeColor = UITheme.TextPrimary;
-            _grpEditor.ForeColor = UITheme.TextSecondary;
-            UITheme.StyleTextBox(_txtSearch);
-            UITheme.StyleComboBox(_cboFilterCategory);
-            UITheme.StyleComboBox(_cboFilterStatus);
-            UITheme.StyleTextBox(_txtSku);
-            UITheme.StyleTextBox(_txtProductName);
-            UITheme.StyleTextBox(_txtDescription);
-            UITheme.StyleComboBox(_cboCategory);
-            UITheme.StyleComboBox(_cboSupplier);
-            UITheme.StyleNumericUpDown(_numPurchasePrice);
-            UITheme.StyleNumericUpDown(_numUnitPrice);
-            UITheme.StyleNumericUpDown(_numInitialStock);
-            UITheme.StyleNumericUpDown(_numReorderLevel);
-            UITheme.StyleDataGridView(_dgvProducts);
-            UITheme.StyleSecondaryButton(_btnResetSearch);
-            UITheme.StyleSecondaryButton(_btnInspect);
-            UITheme.StyleSecondaryButton(_btnClear);
-            UITheme.StyleSecondaryButton(_btnBrowseImage);
+            UITheme.ApplyThemeRecursive(this);
+            _picProductThumb.BackColor = UITheme.InputSurface;
             Invalidate(true);
         }
 
@@ -530,8 +524,11 @@ namespace InventoryManagementSystem.Forms
             _ctxGridMenu.Items.Add(new ToolStripSeparator());
             _ctxGridMenu.Items.Add(mnuStockIn);
             _ctxGridMenu.Items.Add(mnuStockOut);
-            _ctxGridMenu.Items.Add(new ToolStripSeparator());
-            _ctxGridMenu.Items.Add(mnuDelete);
+            if (SessionManager.CanDeleteProducts)
+            {
+                _ctxGridMenu.Items.Add(new ToolStripSeparator());
+                _ctxGridMenu.Items.Add(mnuDelete);
+            }
 
             _dgvProducts.ContextMenuStrip = _ctxGridMenu;
         }

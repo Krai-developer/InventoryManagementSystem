@@ -222,12 +222,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblSummaryMetric1.ForeColor = UITheme.TextPrimary;
-            UITheme.StyleComboBox(_cboReportType);
-            UITheme.StyleComboBox(_cboCategory);
-            UITheme.StyleComboBox(_cboSupplier);
-            UITheme.StyleComboBox(_cboProduct);
-            UITheme.StyleDataGridView(_dgvReport);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
 

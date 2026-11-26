@@ -239,16 +239,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblFormMode.ForeColor = UITheme.TextPrimary;
-            UITheme.StyleTextBox(_txtSearch);
-            UITheme.StyleTextBox(_txtSupplierName);
-            UITheme.StyleTextBox(_txtContactPerson);
-            UITheme.StyleTextBox(_txtPhone);
-            UITheme.StyleTextBox(_txtEmail);
-            UITheme.StyleTextBox(_txtAddress);
-            UITheme.StyleDataGridView(_dgvSuppliers);
-            UITheme.StyleSecondaryButton(_btnResetSearch);
-            UITheme.StyleSecondaryButton(_btnClear);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
 

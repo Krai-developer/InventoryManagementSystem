@@ -253,13 +253,7 @@ namespace InventoryManagementSystem.Forms
 
         public void ApplyTheme()
         {
-            _lblTitle.ForeColor = UITheme.TextPrimary;
-            _lblSubtitle.ForeColor = UITheme.TextMuted;
-            UITheme.StyleTextBox(_txtFullName);
-            UITheme.StyleTextBox(_txtEmail);
-            UITheme.StyleTextBox(_txtCurrentPwd);
-            UITheme.StyleTextBox(_txtNewPwd);
-            UITheme.StyleTextBox(_txtConfirmPwd);
+            UITheme.ApplyThemeRecursive(this);
             Invalidate(true);
         }
     }
