@@ -139,6 +139,9 @@ namespace InventoryManagementSystem.Theme
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsActiveNav { get; set; } = false;
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public bool IsSidebarItem { get; set; } = false;
+
         public GradientButton()
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint |
@@ -201,6 +204,16 @@ namespace InventoryManagementSystem.Theme
                         g.FillPath(dis, path);
                     }
                 }
+                else if (IsSidebarItem && IsOutline)
+                {
+                    if (_isHovered)
+                    {
+                        using (SolidBrush hoverFill = new SolidBrush(Color.FromArgb(22, 42, 78)))
+                        {
+                            g.FillPath(hoverFill, path);
+                        }
+                    }
+                }
                 else if (IsOutline)
                 {
                     Color fillC = _isHovered
@@ -237,9 +250,9 @@ namespace InventoryManagementSystem.Theme
 
                     if (IsActiveNav)
                     {
-                        using (SolidBrush bar = new SolidBrush(Color.FromArgb(224, 242, 254)))
+                        using (SolidBrush bar = new SolidBrush(Color.FromArgb(56, 189, 248)))
                         {
-                            g.FillRectangle(bar, rect.X + 3, rect.Y + 6, 3, Math.Max(8, rect.Height - 12));
+                            g.FillRectangle(bar, rect.X + 2, rect.Y + 6, 3, Math.Max(8, rect.Height - 12));
                         }
                     }
                 }
@@ -247,14 +260,16 @@ namespace InventoryManagementSystem.Theme
 
             Color textCol = !Enabled
                 ? Color.FromArgb(130, 148, 175)
-                : (IsOutline ? (UITheme.IsDarkMode ? Color.FromArgb(219, 234, 254) : UITheme.TextPrimary) : ForeColor);
+                : (IsSidebarItem && IsOutline
+                    ? (_isHovered ? Color.White : Color.FromArgb(165, 190, 224))
+                    : (IsOutline ? (UITheme.IsDarkMode ? Color.FromArgb(219, 234, 254) : UITheme.TextPrimary) : ForeColor));
 
             bool hasIcon = !string.IsNullOrWhiteSpace(IconKind);
             if (hasIcon && TextAlign == ContentAlignment.MiddleLeft)
             {
-                Color iconCol = IsOutline
-                    ? (_isHovered ? Color.FromArgb(56, 189, 248) : Color.FromArgb(147, 197, 253))
-                    : Color.White;
+                Color iconCol = IsSidebarItem && IsOutline
+                    ? (_isHovered ? Color.FromArgb(56, 189, 248) : Color.FromArgb(148, 175, 214))
+                    : (IsOutline ? (_isHovered ? Color.FromArgb(56, 189, 248) : Color.FromArgb(147, 197, 253)) : Color.White);
                 UITheme.DrawNavIcon(g, IconKind, new RectangleF(14, (Height - 16) / 2f, 16, 16), iconCol);
             }
 
@@ -771,6 +786,8 @@ namespace InventoryManagementSystem.Theme
         {
             foreach (Control c in parent.Controls)
             {
+                if (c.Name == "SidebarPanel" || c.Name == "TitleBarPanel")
+                    continue;
                 if (c is GlassCardPanel || c is GradientButton || c is DonutChartControl || c is ToggleSwitch)
                 {
                     c.Invalidate();

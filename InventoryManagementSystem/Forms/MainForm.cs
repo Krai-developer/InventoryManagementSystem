@@ -118,6 +118,7 @@ namespace InventoryManagementSystem.Forms
         {
             _titleBarPanel = new Panel
             {
+                Name = "TitleBarPanel",
                 Dock = DockStyle.Top,
                 Height = 36,
                 BackColor = UITheme.TopBarBg
@@ -261,6 +262,7 @@ namespace InventoryManagementSystem.Forms
             // Left Sidebar matching the reference screenshot
             _sidebarPanel = new Panel
             {
+                Name = "SidebarPanel",
                 Dock = DockStyle.Left,
                 Width = 212,
                 BackColor = UITheme.SidebarBg
@@ -285,7 +287,13 @@ namespace InventoryManagementSystem.Forms
                 }
 
                 // 3D Glowing Isometric Cube Brand Logo at top center
-                UITheme.DrawIsometricCube(g, new RectangleF(72, 22, 68, 68), glowing: true);
+                UITheme.DrawIsometricCube(g, new RectangleF(80, 14, 52, 52), glowing: true);
+
+                // Subtle divider line separating brand header from grouped navigation
+                using (Pen div = new Pen(Color.FromArgb(45, 56, 139, 253), 1f))
+                {
+                    g.DrawLine(div, 16, 114, _sidebarPanel.Width - 16, 114);
+                }
             };
 
             var lblBrandName = new Label
@@ -295,8 +303,8 @@ namespace InventoryManagementSystem.Forms
                 ForeColor = Color.White,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(12, 98),
-                Size = new Size(188, 24)
+                Location = new Point(12, 68),
+                Size = new Size(188, 22)
             };
 
             var lblBrandSub = new Label
@@ -306,16 +314,18 @@ namespace InventoryManagementSystem.Forms
                 ForeColor = SessionManager.IsAdmin ? Color.FromArgb(56, 189, 248) : Color.FromArgb(52, 211, 153),
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(12, 122),
+                Location = new Point(12, 91),
                 Size = new Size(188, 18)
             };
 
             _sidebarPanel.Controls.Add(lblBrandName);
             _sidebarPanel.Controls.Add(lblBrandSub);
 
-            // Navigation Pill Buttons tailored per role with crisp vector icons
+            // Grouped Navigation Sections tailored per role (OPERATIONS / ANALYTICS / SYSTEM or ACCOUNT)
             bool isAdmin = SessionManager.IsAdmin;
-            int navY = 148;
+            int navY = 120;
+
+            AddSidebarSectionHeader("OPERATIONS", ref navY, visible: true);
             _btnNavDashboard  = CreateSidebarNavButton("Dashboard", "DASHBOARD", ref navY, visible: true);
             _btnNavProducts   = CreateSidebarNavButton("Products", "PRODUCTS", ref navY, visible: true);
             _btnNavCategories = CreateSidebarNavButton("Categories", "CATEGORIES", ref navY, visible: isAdmin);
@@ -323,9 +333,13 @@ namespace InventoryManagementSystem.Forms
             _btnNavStock      = CreateSidebarNavButton("Stock Management", "STOCK", ref navY, visible: isAdmin);
             _btnNavStockIn    = CreateSidebarNavButton("Stock In", "STOCKIN", ref navY, visible: !isAdmin);
             _btnNavStockOut   = CreateSidebarNavButton("Stock Out", "STOCKOUT", ref navY, visible: !isAdmin);
+
+            AddSidebarSectionHeader("ANALYTICS", ref navY, visible: true);
             _btnNavTxHistory  = CreateSidebarNavButton("Transaction History", "HISTORY", ref navY, visible: !isAdmin);
             _btnNavReports    = CreateSidebarNavButton("Reports", "REPORTS", ref navY, visible: true);
             _btnNavActivity   = CreateSidebarNavButton("Activity History", "ACTIVITY", ref navY, visible: isAdmin);
+
+            AddSidebarSectionHeader(isAdmin ? "SYSTEM" : "ACCOUNT", ref navY, visible: true);
             _btnNavUsers      = CreateSidebarNavButton("User Management", "USERS", ref navY, visible: isAdmin);
             _btnNavSettings   = CreateSidebarNavButton("Settings", "SETTINGS", ref navY, visible: isAdmin);
             _btnNavProfile    = CreateSidebarNavButton("My Account", "PROFILE", ref navY, visible: !isAdmin);
@@ -399,15 +413,34 @@ namespace InventoryManagementSystem.Forms
             Controls.Add(_titleBarPanel);
         }
 
+        private void AddSidebarSectionHeader(string title, ref int y, bool visible = true)
+        {
+            if (!visible) return;
+
+            y += 7;
+            var lblSection = new Label
+            {
+                Text = title,
+                Font = new Font("Segoe UI Semibold", 7.5F, FontStyle.Bold),
+                ForeColor = Color.FromArgb(112, 142, 184),
+                BackColor = Color.Transparent,
+                Location = new Point(22, y),
+                Size = new Size(172, 15)
+            };
+            _sidebarPanel.Controls.Add(lblSection);
+            y += 18;
+        }
+
         private GradientButton CreateSidebarNavButton(string text, string iconKind, ref int y, bool visible = true)
         {
             var btn = new GradientButton
             {
                 Text = text,
                 IconKind = iconKind,
-                Location = new Point(14, y),
-                Size = new Size(184, 33),
-                CornerRadius = 9,
+                IsSidebarItem = true,
+                Location = new Point(12, y),
+                Size = new Size(188, 32),
+                CornerRadius = 8,
                 TextAlign = ContentAlignment.MiddleLeft,
                 Padding = new Padding(16, 0, 0, 0),
                 Font = UITheme.FontNavButton,
@@ -419,7 +452,7 @@ namespace InventoryManagementSystem.Forms
 
             _sidebarPanel.Controls.Add(btn);
             _navButtons.Add(btn);
-            if (visible) y += 37;
+            if (visible) y += 34;
             return btn;
         }
 
