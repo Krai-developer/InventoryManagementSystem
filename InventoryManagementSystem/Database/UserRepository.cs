@@ -540,6 +540,58 @@ namespace InventoryManagementSystem.Database
         }
 
         /// <summary>
+        /// Allows an authenticated user to update their own permitted personal details (Full Name & Email).
+        /// Role and account status are never modifiable here.
+        /// </summary>
+        public bool UpdateOwnProfile(string fullName, string emailAddress, out string message)
+        {
+            SessionManager.RequireAuthenticated("update personal profile");
+
+            string cleanName = (fullName ?? string.Empty).Trim();
+            string cleanEmail = (emailAddress ?? string.Empty).Trim().ToLowerInvariant();
+
+            if (cleanName.Length < 2)
+            {
+                message = "Full Name must be at least 2 characters.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(cleanEmail) || !IsValidEmail(cleanEmail))
+            {
+                message = "Please enter a valid Email Address.";
+                return false;
+            }
+
+            int userId = SessionManager.CurrentUser!.UserID;
+            if (EmailExists(cleanEmail, excludeUserId: userId))
+            {
+                message = $"Email address '{cleanEmail}' is already registered to another account.";
+                return false;
+            }
+
+            using (SqlConnection conn = DbConnection.GetConnection())
+            using (SqlCommand cmd = new SqlCommand(@"
+                UPDATE dbo.Users
+                SET FullName = @FullName,
+                    EmailAddress = @EmailAddress
+                WHERE UserID = @UserID;", conn))
+            {
+                cmd.Parameters.AddWithValue("@FullName", cleanName);
+                cmd.Parameters.AddWithValue("@EmailAddress", cleanEmail);
+                cmd.Parameters.AddWithValue("@UserID", userId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            SessionManager.CurrentUser.FullName = cleanName;
+            SessionManager.CurrentUser.EmailAddress = cleanEmail;
+
+            ActivityLogRepository.LogSafe("Profile Updated", SessionManager.CurrentUser.Username, "Updated personal name/email details.");
+            message = "Personal details updated successfully.";
+            return true;
+        }
+
+        /// <summary>
         /// Explicitly blocks role escalation and demotion of the single Admin account.
         /// </summary>
         public bool ChangeUserRole(int userId, string requestedRole, out string message)

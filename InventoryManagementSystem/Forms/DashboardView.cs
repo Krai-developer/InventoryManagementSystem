@@ -1047,21 +1047,8 @@ namespace InventoryManagementSystem.Forms
         {
             _pnlActivityList.Controls.Clear();
 
-            if (!SessionManager.CanViewActivityHistory)
-            {
-                var lblRestricted = new Label
-                {
-                    Text = "Activity history is visible to the Administrator only.",
-                    Font = UITheme.FontSmall,
-                    ForeColor = UITheme.TextMuted,
-                    BackColor = Color.Transparent,
-                    Location = new Point(4, 18),
-                    AutoSize = true
-                };
-                _pnlActivityList.Controls.Add(lblRestricted);
-                return;
-            }
-
+            // Permission Matrix: Admin sees all recent activity; User sees only their own activities
+            // (enforced inside ActivityLogRepository.GetActivities).
             List<ActivityLog> logs = _activityRepo.GetActivities(maxRows: 3);
 
             if (logs.Count == 0)

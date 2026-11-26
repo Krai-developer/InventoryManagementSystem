@@ -9,8 +9,9 @@ using InventoryManagementSystem.Theme;
 namespace InventoryManagementSystem.Forms
 {
     /// <summary>
-    /// Displays the currently signed-in user's account profile, role permissions summary,
-    /// and allows changing their own password securely.
+    /// Displays the currently signed-in user's account profile, allows updating permitted personal details
+    /// (Full Name and Email Address), and allows securely changing their own password.
+    /// Role changes are strictly disallowed.
     /// </summary>
     public class UserProfileForm : UserControl
     {
@@ -18,8 +19,11 @@ namespace InventoryManagementSystem.Forms
 
         private Label _lblTitle = null!;
         private Label _lblSubtitle = null!;
-        private Label _lblProfileInfo = null!;
+        private Label _lblProfileMeta = null!;
         private Label _lblRoleSummary = null!;
+
+        private TextBox _txtFullName = null!;
+        private TextBox _txtEmail = null!;
 
         private TextBox _txtCurrentPwd = null!;
         private TextBox _txtNewPwd = null!;
@@ -47,13 +51,13 @@ namespace InventoryManagementSystem.Forms
                 BackColor = Color.Transparent
             };
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 56));
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 215));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             var header = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent };
             _lblTitle = new Label
             {
-                Text = "My Account Profile",
+                Text = "My Account",
                 Font = UITheme.FontWelcome,
                 ForeColor = UITheme.TextPrimary,
                 Location = new Point(0, 0),
@@ -61,7 +65,7 @@ namespace InventoryManagementSystem.Forms
             };
             _lblSubtitle = new Label
             {
-                Text = "View your signed-in account details, role access, and update your password.",
+                Text = "View your account role, update permitted personal details, and change your password.",
                 Font = UITheme.FontSmall,
                 ForeColor = UITheme.TextMuted,
                 Location = new Point(2, 32),
@@ -71,44 +75,68 @@ namespace InventoryManagementSystem.Forms
             header.Controls.Add(_lblSubtitle);
             root.Controls.Add(header, 0, 0);
 
+            // Top Card: Personal Details + Role Summary
             var infoCard = UITheme.CreateCardPanel(UITheme.ElectricBlue, topTint: true);
             infoCard.Dock = DockStyle.Fill;
             infoCard.Margin = new Padding(0, 6, 0, 12);
 
             infoCard.Controls.Add(new Label
             {
-                Text = "Account Information",
+                Text = "Personal Details",
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
-                Location = new Point(22, 16),
+                Location = new Point(22, 14),
                 AutoSize = true
             });
 
-            _lblProfileInfo = new Label
+            _lblProfileMeta = new Label
             {
-                Text = "Loading profile...",
-                Font = UITheme.FontRegular,
-                ForeColor = UITheme.TextSecondary,
+                Text = "Loading...",
+                Font = UITheme.FontSmall,
+                ForeColor = UITheme.ElectricBlue,
                 BackColor = Color.Transparent,
-                Location = new Point(22, 48),
-                Size = new Size(440, 120)
+                Location = new Point(22, 40),
+                Size = new Size(440, 22)
             };
+
+            infoCard.Controls.Add(new Label { Text = "Full Name", Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(22, 66), AutoSize = true });
+            _txtFullName = new TextBox { Location = new Point(22, 85), Size = new Size(210, 27) };
+            UITheme.StyleTextBox(_txtFullName);
+
+            infoCard.Controls.Add(new Label { Text = "Email Address", Font = UITheme.FontSmall, ForeColor = UITheme.TextSecondary, BackColor = Color.Transparent, Location = new Point(246, 66), AutoSize = true });
+            _txtEmail = new TextBox { Location = new Point(246, 85), Size = new Size(220, 27) };
+            UITheme.StyleTextBox(_txtEmail);
+
+            var btnSaveProfile = new GradientButton
+            {
+                Text = "Save Personal Details",
+                Location = new Point(22, 126),
+                Size = new Size(200, 36),
+                CornerRadius = 9,
+                GradientStart = UITheme.TealGlow,
+                GradientEnd = UITheme.SuccessGreen
+            };
+            btnSaveProfile.Click += BtnSaveProfile_Click;
 
             _lblRoleSummary = new Label
             {
                 Text = string.Empty,
                 Font = UITheme.FontSmall,
-                ForeColor = UITheme.ElectricBlue,
+                ForeColor = UITheme.TextSecondary,
                 BackColor = Color.Transparent,
-                Location = new Point(480, 48),
-                Size = new Size(440, 120)
+                Location = new Point(495, 42),
+                Size = new Size(430, 130)
             };
 
-            infoCard.Controls.Add(_lblProfileInfo);
+            infoCard.Controls.Add(_lblProfileMeta);
+            infoCard.Controls.Add(_txtFullName);
+            infoCard.Controls.Add(_txtEmail);
+            infoCard.Controls.Add(btnSaveProfile);
             infoCard.Controls.Add(_lblRoleSummary);
             root.Controls.Add(infoCard, 0, 1);
 
+            // Bottom Card: Change Password
             var pwdCard = UITheme.CreateCardPanel();
             pwdCard.Dock = DockStyle.Fill;
 
@@ -186,23 +214,25 @@ namespace InventoryManagementSystem.Forms
             UserAccount? user = SessionManager.CurrentUser;
             if (user == null)
             {
-                _lblProfileInfo.Text = "Not signed in.";
-                _lblRoleSummary.Text = string.Empty;
+                _lblProfileMeta.Text = "Not signed in.";
                 return;
             }
 
-            string lastLogin = user.LastLoginAt.HasValue ? user.LastLoginAt.Value.ToString("MMM dd, yyyy hh:mm tt") : "Current session";
-            _lblProfileInfo.Text =
-                $"User ID: {user.UserID}\n" +
-                $"Full Name: {user.FullName}\n" +
-                $"Username: {user.Username}\n" +
-                $"Email: {user.EmailAddress}\n" +
-                $"Role: {user.Role}   |   Status: {user.AccountStatus}\n" +
-                $"Registered: {user.CreatedAt:MMM dd, yyyy}   |   Last Login: {lastLogin}";
+            _lblProfileMeta.Text = $"User ID #{user.UserID}  •  Username: {user.Username}  •  Role: {user.Role} ({user.AccountStatus})";
+            _txtFullName.Text = user.FullName;
+            _txtEmail.Text = user.EmailAddress;
 
             _lblRoleSummary.Text = user.IsAdmin
-                ? "Permissions (Admin):\n• Full access to Dashboard, Products (Add/Edit/Delete), Categories, Suppliers\n• Stock-In / Stock-Out / Controlled Stock Adjustments, All 7 Reports, Activity History\n• User Management, Backup & Restore, Application Settings"
-                : "Permissions (Inventory Staff — User):\n• Access Dashboard, View & Search Products (View-Only), Low-Stock Alerts\n• Record Stock-In & Stock-Out, View Transaction History & Permitted Reports\n• Restricted: Add/Edit/Delete Products, Categories, Suppliers, Adjustments, Activity History, Users, Settings";
+                ? "Permissions (Admin):\n• Full access to Products, Categories, Suppliers, Stock Adjustments\n• View All Transactions, All Reports, Complete Activity History\n• User Management, Backup & Restore, System Settings"
+                : "Permissions (Inventory Staff — User):\n• View & Search Products (read-only), Record Stock In & Stock Out\n• View Own Recorded Transactions, Own Activities & Permitted Reports\n• Update Personal Details & Change Own Password\n• Restricted: Master Product Edits, Categories, Suppliers, Users, Settings";
+        }
+
+        private void BtnSaveProfile_Click(object? sender, EventArgs e)
+        {
+            bool ok = _userRepo.UpdateOwnProfile(_txtFullName.Text, _txtEmail.Text, out string msg);
+            MessageBox.Show(msg, ok ? "Profile Updated" : "Validation Error",
+                MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            if (ok) RefreshData();
         }
 
         private void BtnUpdatePwd_Click(object? sender, EventArgs e)
@@ -225,6 +255,8 @@ namespace InventoryManagementSystem.Forms
         {
             _lblTitle.ForeColor = UITheme.TextPrimary;
             _lblSubtitle.ForeColor = UITheme.TextMuted;
+            UITheme.StyleTextBox(_txtFullName);
+            UITheme.StyleTextBox(_txtEmail);
             UITheme.StyleTextBox(_txtCurrentPwd);
             UITheme.StyleTextBox(_txtNewPwd);
             UITheme.StyleTextBox(_txtConfirmPwd);

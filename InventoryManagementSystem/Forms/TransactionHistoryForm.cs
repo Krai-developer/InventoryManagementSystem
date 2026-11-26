@@ -56,7 +56,7 @@ namespace InventoryManagementSystem.Forms
 
             _lblTitle = new Label
             {
-                Text = "Stock Transaction History",
+                Text = SessionManager.IsAdmin ? "All Stock Transactions" : "My Stock Transaction History",
                 Font = UITheme.FontSectionHeader,
                 ForeColor = UITheme.TextPrimary,
                 BackColor = Color.Transparent,
@@ -141,7 +141,8 @@ namespace InventoryManagementSystem.Forms
                 BackColor = Color.Transparent,
                 Location = new Point(16, 74),
                 AutoSize = true,
-                Cursor = Cursors.Hand
+                Cursor = Cursors.Hand,
+                Visible = SessionManager.IsAdmin
             };
             _chkOnlyMine.CheckedChanged += (s, e) => LoadHistory();
 

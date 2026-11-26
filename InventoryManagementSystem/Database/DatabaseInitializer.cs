@@ -139,6 +139,9 @@ namespace InventoryManagementSystem.Database
                             IF COL_LENGTH('dbo.StockTransactions', 'PerformedBy') IS NULL
                                 ALTER TABLE dbo.StockTransactions ADD PerformedBy NVARCHAR(100) NULL;
 
+                            IF COL_LENGTH('dbo.StockTransactions', 'UserID') IS NULL
+                                ALTER TABLE dbo.StockTransactions ADD UserID INT NULL;
+
                             -- Allow controlled 'ADJUST' transaction type on existing databases
                             DECLARE @chkName NVARCHAR(128);
                             SELECT TOP 1 @chkName = cc.name
@@ -158,6 +161,8 @@ namespace InventoryManagementSystem.Database
                         BEGIN
                             CREATE TABLE dbo.ActivityLogs (
                                 ActivityID    INT IDENTITY(1,1) PRIMARY KEY,
+                                UserID        INT NULL,
+                                Username      NVARCHAR(60) NULL,
                                 Action        NVARCHAR(100) NOT NULL,
                                 RelatedRecord NVARCHAR(200) NOT NULL,
                                 Details       NVARCHAR(500) NULL,
@@ -169,6 +174,10 @@ namespace InventoryManagementSystem.Database
                         BEGIN
                             IF COL_LENGTH('dbo.ActivityLogs', 'PerformedBy') IS NULL
                                 ALTER TABLE dbo.ActivityLogs ADD PerformedBy NVARCHAR(100) NULL;
+                            IF COL_LENGTH('dbo.ActivityLogs', 'UserID') IS NULL
+                                ALTER TABLE dbo.ActivityLogs ADD UserID INT NULL;
+                            IF COL_LENGTH('dbo.ActivityLogs', 'Username') IS NULL
+                                ALTER TABLE dbo.ActivityLogs ADD Username NVARCHAR(60) NULL;
                         END
 
                         -- 6. Users Table (Authentication, Roles & Single-Admin Enforcement)

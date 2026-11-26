@@ -97,12 +97,13 @@ namespace InventoryManagementSystem.Database
 
                         string insertSql = @"
                             INSERT INTO dbo.StockTransactions
-                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, PerformedBy, TransactionDate)
+                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, UserID, PerformedBy, TransactionDate)
                             VALUES
-                                (@ProductID, @SupplierID, @TransactionType, @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @PerformedBy, @TransactionDate);";
+                                (@ProductID, @SupplierID, @TransactionType, @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @UserID, @PerformedBy, @TransactionDate);";
 
                         using (SqlCommand insertCmd = new SqlCommand(insertSql, conn, tx))
                         {
+                            int? uid = SessionManager.CurrentUser?.UserID;
                             insertCmd.Parameters.AddWithValue("@ProductID", productId);
                             insertCmd.Parameters.AddWithValue("@SupplierID", effectiveSupplierId.HasValue ? effectiveSupplierId.Value : DBNull.Value);
                             insertCmd.Parameters.AddWithValue("@TransactionType", normalizedType);
@@ -111,6 +112,7 @@ namespace InventoryManagementSystem.Database
                             insertCmd.Parameters.AddWithValue("@NewStock", newStock);
                             insertCmd.Parameters.AddWithValue("@ReferenceNo", string.IsNullOrWhiteSpace(referenceNo) ? DBNull.Value : referenceNo.Trim());
                             insertCmd.Parameters.AddWithValue("@Remarks", string.IsNullOrWhiteSpace(remarks) ? DBNull.Value : remarks.Trim());
+                            insertCmd.Parameters.AddWithValue("@UserID", uid.HasValue ? uid.Value : DBNull.Value);
                             insertCmd.Parameters.AddWithValue("@PerformedBy", SessionManager.CurrentActorLabel);
                             insertCmd.Parameters.AddWithValue("@TransactionDate", transactionDate ?? DateTime.Now);
 
@@ -211,16 +213,18 @@ namespace InventoryManagementSystem.Database
 
                         using (SqlCommand insertCmd = new SqlCommand(@"
                             INSERT INTO dbo.StockTransactions
-                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, PerformedBy, TransactionDate)
+                                (ProductID, SupplierID, TransactionType, Quantity, PreviousStock, NewStock, ReferenceNo, Remarks, UserID, PerformedBy, TransactionDate)
                             VALUES
-                                (@ProductID, NULL, N'ADJUST', @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @PerformedBy, @TransactionDate);", conn, tx))
+                                (@ProductID, NULL, N'ADJUST', @Quantity, @PreviousStock, @NewStock, @ReferenceNo, @Remarks, @UserID, @PerformedBy, @TransactionDate);", conn, tx))
                         {
+                            int? uid = SessionManager.CurrentUser?.UserID;
                             insertCmd.Parameters.AddWithValue("@ProductID", productId);
                             insertCmd.Parameters.AddWithValue("@Quantity", delta);
                             insertCmd.Parameters.AddWithValue("@PreviousStock", currentStock);
                             insertCmd.Parameters.AddWithValue("@NewStock", targetNewStock);
                             insertCmd.Parameters.AddWithValue("@ReferenceNo", reason.Trim());
                             insertCmd.Parameters.AddWithValue("@Remarks", string.IsNullOrWhiteSpace(remarks) ? DBNull.Value : remarks.Trim());
+                            insertCmd.Parameters.AddWithValue("@UserID", uid.HasValue ? uid.Value : DBNull.Value);
                             insertCmd.Parameters.AddWithValue("@PerformedBy", SessionManager.CurrentActorLabel);
                             insertCmd.Parameters.AddWithValue("@TransactionDate", transactionDate ?? DateTime.Now);
                             insertCmd.ExecuteNonQuery();
@@ -255,6 +259,13 @@ namespace InventoryManagementSystem.Database
             int supplierId = 0,
             string performedByFilter = "")
         {
+            // Permission Matrix: Admin views ALL transactions; User views OWN recorded transactions only.
+            SessionManager.RequireAuthenticated("view stock transactions");
+
+            bool isAdmin = SessionManager.IsAdmin;
+            int currentUid = SessionManager.CurrentUser!.UserID;
+            string currentUsername = SessionManager.CurrentUser!.Username;
+
             var list = new List<StockTransaction>();
 
             string sql = $@"
@@ -272,6 +283,7 @@ namespace InventoryManagementSystem.Database
                     t.NewStock,
                     ISNULL(t.ReferenceNo, N'') AS ReferenceNo,
                     ISNULL(t.Remarks, N'') AS Remarks,
+                    t.UserID,
                     ISNULL(t.PerformedBy, N'System') AS PerformedBy,
                     t.TransactionDate
                 FROM dbo.StockTransactions t
@@ -279,7 +291,8 @@ namespace InventoryManagementSystem.Database
                 INNER JOIN dbo.Categories c ON p.CategoryID = c.CategoryID
                 LEFT JOIN dbo.Suppliers s ON t.SupplierID = s.SupplierID
                 LEFT JOIN dbo.Suppliers ps ON p.SupplierID = ps.SupplierID
-                WHERE (@Type = N'ALL' OR t.TransactionType = @Type)
+                WHERE (@IsAdmin = 1 OR t.UserID = @CurrentUserID OR ISNULL(t.PerformedBy, N'') LIKE @CurrentUserPattern)
+                  AND (@Type = N'ALL' OR t.TransactionType = @Type)
                   AND (@CategoryID = 0 OR p.CategoryID = @CategoryID)
                   AND (@ProductID = 0 OR t.ProductID = @ProductID)
                   AND (@SupplierID = 0 OR t.SupplierID = @SupplierID OR p.SupplierID = @SupplierID)
@@ -299,6 +312,9 @@ namespace InventoryManagementSystem.Database
             {
                 string trimmedKeyword = (searchKeyword ?? string.Empty).Trim();
                 string trimmedActor = (performedByFilter ?? string.Empty).Trim();
+                cmd.Parameters.AddWithValue("@IsAdmin", isAdmin ? 1 : 0);
+                cmd.Parameters.AddWithValue("@CurrentUserID", currentUid);
+                cmd.Parameters.AddWithValue("@CurrentUserPattern", $"{currentUsername}%");
                 cmd.Parameters.AddWithValue("@Type", (transactionType ?? "ALL").ToUpperInvariant());
                 cmd.Parameters.AddWithValue("@CategoryID", categoryId);
                 cmd.Parameters.AddWithValue("@ProductID", productId);
@@ -330,8 +346,9 @@ namespace InventoryManagementSystem.Database
                             NewStock = reader.GetInt32(10),
                             ReferenceNo = reader.GetString(11),
                             Remarks = reader.GetString(12),
-                            PerformedBy = reader.GetString(13),
-                            TransactionDate = reader.GetDateTime(14)
+                            UserID = reader.IsDBNull(13) ? null : reader.GetInt32(13),
+                            PerformedBy = reader.GetString(14),
+                            TransactionDate = reader.GetDateTime(15)
                         });
                     }
                 }

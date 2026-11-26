@@ -551,11 +551,42 @@ namespace InventoryManagementSystem.Forms
                 return;
             }
 
-            if (_transactionType == "OUT" && quantity > selectedProduct.QuantityInStock)
+            if (_transactionType == "OUT")
             {
-                MessageBox.Show(
-                    $"Cannot release {quantity} units of '{selectedProduct.ProductName}'. Available stock: {selectedProduct.QuantityInStock}.",
-                    "Insufficient Stock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (quantity > selectedProduct.QuantityInStock)
+                {
+                    MessageBox.Show(
+                        $"Cannot release {quantity} units of '{selectedProduct.ProductName}'. Available stock: {selectedProduct.QuantityInStock}.",
+                        "Insufficient Stock", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(_txtReferenceNo.Text) && string.IsNullOrWhiteSpace(_txtRemarks.Text))
+                {
+                    MessageBox.Show("Please enter a reason or notes for releasing stock.",
+                        "Reason Required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    _txtReferenceNo.Focus();
+                    return;
+                }
+            }
+
+            string verbLabel = _transactionType == "IN" ? "Stock In (+)" : "Stock Out (-)";
+            int projected = _transactionType == "IN"
+                ? selectedProduct.QuantityInStock + quantity
+                : selectedProduct.QuantityInStock - quantity;
+
+            if (MessageBox.Show(
+                $"Review Transaction:\n\n" +
+                $"Type: {verbLabel}\n" +
+                $"Product: {selectedProduct.ProductName} ({selectedProduct.SKU})\n" +
+                $"Quantity: {quantity}\n" +
+                $"Stock Balance: {selectedProduct.QuantityInStock} -> {projected}\n" +
+                $"Date: {txDate:MMM dd, yyyy}\n\n" +
+                "Save this transaction?",
+                "Confirm Stock Transaction",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+            {
                 return;
             }
 
@@ -566,29 +597,37 @@ namespace InventoryManagementSystem.Forms
                 if (sid > 0) supplierId = sid;
             }
 
-            bool ok = _txRepo.RecordStockMovement(
-                selectedProduct.ProductID,
-                _transactionType,
-                quantity,
-                _txtReferenceNo.Text.Trim(),
-                _txtRemarks.Text.Trim(),
-                out string resultMessage,
-                supplierId,
-                txDate);
+            _btnSubmit.Enabled = false;
+            try
+            {
+                bool ok = _txRepo.RecordStockMovement(
+                    selectedProduct.ProductID,
+                    _transactionType,
+                    quantity,
+                    _txtReferenceNo.Text.Trim(),
+                    _txtRemarks.Text.Trim(),
+                    out string resultMessage,
+                    supplierId,
+                    txDate);
 
-            if (ok)
-            {
-                MessageBox.Show(resultMessage, "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                int keepProductId = selectedProduct.ProductID;
-                _numQuantity.Value = 1;
-                _txtRemarks.Clear();
-                GenerateReferenceNumber();
-                RefreshData(keepProductId);
-                StockMovementRecorded?.Invoke();
+                if (ok)
+                {
+                    MessageBox.Show(resultMessage, "Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    int keepProductId = selectedProduct.ProductID;
+                    _numQuantity.Value = 1;
+                    _txtRemarks.Clear();
+                    GenerateReferenceNumber();
+                    RefreshData(keepProductId);
+                    StockMovementRecorded?.Invoke();
+                }
+                else
+                {
+                    MessageBox.Show(resultMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            finally
             {
-                MessageBox.Show(resultMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                _btnSubmit.Enabled = true;
             }
         }
 
