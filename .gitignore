@@ -1,0 +1,15 @@
+## Visual Studio / .NET
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.cache
+*.log
+*.pdb
+
+## Publish / Temp outputs
+publish/
+*.tmp
+Thumbs.db
+.DS_Store
